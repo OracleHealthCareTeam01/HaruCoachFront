@@ -46,22 +46,20 @@ HaruCoach/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── AndroidManifest.xml
-│   │   │   ├── java/com/example/harucoach/
+│   │   │   ├── java/harucoach/harucoachfront/
 │   │   │   │   ├── HaruCoachApplication.kt   # 앱 초기화 (DI, 전역 설정)
 │   │   │   │   ├── di/                       # Hilt 모듈 (Repository, DataSource 주입)
 │   │   │   │   ├── data/
 │   │   │   │   │   ├── repository/           # Repository 계층 (DataStore, Network 접근)
-│   │   │   │   │   ├── local/                # DataStore, Room 등 로컬 데이터 관리
+│   │   │   │   │   ├── models/                # data class
 │   │   │   │   │   ├── remote/               # Retrofit API 정의
 │   │   │   │   ├── ui/
-│   │   │   │   │   ├── viewmodel/            # ViewModel 계층
-│   │   │   │   │   ├── screen/               # UI 화면 단위 (Activity / Fragment)
-│   │   │   │   │   ├── component/            # 공통 UI 컴포넌트
-│   │   │   │   ├
+│   │   │   │   │   ├── screens/               # UI 화면 단위 (Activity / Fragment)
+│   │   │   │   │   
+│   │   │   │   ├── viewmodel/            # ViewModel 계층
 │   │   │   ├── res/                          # 리소스 (layout, drawable, values 등)
 │   │   │   
 │   │   │   
-│   ├── proguard-rules.pro
 │
 ├── gradle/
 │   ├── wrapper/                              # Gradle wrapper 실행 환경
