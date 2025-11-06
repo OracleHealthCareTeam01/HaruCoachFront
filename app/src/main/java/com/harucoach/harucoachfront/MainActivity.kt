@@ -3,14 +3,27 @@ package com.harucoach.harucoachfront
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.harucoach.harucoachfront.data.PreferencesManager
 import com.harucoach.harucoachfront.ui.screens.HomeScreen
 import com.harucoach.harucoachfront.ui.screens.LoginScreen
+import com.harucoach.harucoachfront.ui.screens.LoginScreen2
 import com.harucoach.harucoachfront.ui.theme.HaruCoachFrontTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.harucoach.harucoachfront.R // Added R import
+import com.harucoach.harucoachfront.ui.screens.HaruApp // Import HaruApp
 
 
 @AndroidEntryPoint // 2. Hilt가 의존성을 주입할 진입점임을 선언
@@ -21,17 +34,67 @@ class MainActivity : ComponentActivity() {
         // 토큰 있으면 홈 시작
         val prefsManager = PreferencesManager(this)
         val token = prefsManager.readAuthTokenBlocking()
-        val startDestination = if (token != null && token.isNotEmpty()) "home" else "login"
+        val startDestination = if (token != null && token.isNotEmpty()) "haruApp" else "login"
+
+
+        /** ---- 나눔스퀘어 폰트 지정 ---- */
+        val nanumSquareNeo = FontFamily(
+            Font(R.font.nanum_square_neo_variable, FontWeight.Normal)
+        )
+
+        /** ---- 나눔스퀘어 Typography ---- */
+        val appTypography = Typography(
+            titleLarge = TextStyle(
+                fontFamily = nanumSquareNeo,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp
+            ),
+            bodyLarge = TextStyle(
+                fontFamily = nanumSquareNeo,
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp
+            ),
+            bodyMedium = TextStyle(
+                fontFamily = nanumSquareNeo,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp
+            ),
+            labelLarge = TextStyle(
+                fontFamily = nanumSquareNeo,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp
+            )
+        )
+
+        /** ---- 테마 ---- */
+        @Composable
+        fun AppTheme(content: @Composable () -> Unit) {
+            val colors = lightColorScheme(
+                primary = Color(0xFF3AA85B), // 버튼 초록
+                onPrimary = Color.White,
+                surface = Color.White,
+                onSurface = Color(0xFF111111)
+            )
+
+            MaterialTheme(
+                colorScheme = colors,
+                typography = appTypography,  // 👈 나눔스퀘어 적용!
+                content = content
+            )
+        }
 
         setContent {
-            HaruCoachFrontTheme {
-                val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = startDestination) {
-                    composable("login") { LoginScreen(navController) }  // 로그인 시작
-                    composable("home") { HomeScreen() }  // 성공 화면
-                }
-            } // end HaruCoachFrontTheme
-        }// end setContent
+            AppTheme{
+                HaruCoachFrontTheme {
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = startDestination) {
+                        composable("login") { 
+                            LoginScreen2(onLoginClick = { navController.navigate("haruApp") }, onJoinClick = {}) 
+                        }
+                        composable("haruApp") { HaruApp() }
+                    }
+                } // end HaruCoachFrontTheme
+            }// end setContent
+        }
     }
 }
-

@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -53,6 +54,21 @@ fun HaruCoachFrontTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        content = content
+    )
+}
+private val colorScheme = lightColorScheme(
+    primary = HaruGreen,
+    secondary = HaruGreen,
+    surface = Color.White,
+    background = Color(0xFFF7FAF8)
+)
+
+@Composable
+fun HaruTheme(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = MaterialTheme.typography,
         content = content
     )
 }
