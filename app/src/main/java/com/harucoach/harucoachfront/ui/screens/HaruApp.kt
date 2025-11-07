@@ -87,19 +87,21 @@ private fun HaruBottomBar(
     currentRoute: String?,
     onSelect: (String) -> Unit
 ) {
-    NavigationBar {
-        NavigationBarItem(
-            selected = currentRoute in listOf(Routes.HOME, Routes.COGNITIVE, Routes.DIARY, Routes.LEARN),
-            onClick = { onSelect(Routes.HOME) },
-            icon = { Icon(Icons.Default.Home, contentDescription = "홈") },
-            label = { Text("홈") }
-        )
-        NavigationBarItem(
-            selected = currentRoute == Routes.MY,
-            onClick = { onSelect(Routes.MY) },
-            icon = { Icon(Icons.Default.Person, contentDescription = "마이") },
-            label = { Text("마이") }
-        )
+    if (currentRoute != Routes.COGNITIVE_TEST){
+        NavigationBar {
+            NavigationBarItem(
+                selected = currentRoute in listOf(Routes.HOME, Routes.COGNITIVE, Routes.DIARY, Routes.LEARN),
+                onClick = { onSelect(Routes.HOME) },
+                icon = { Icon(Icons.Default.Home, contentDescription = "홈") },
+                label = { Text("홈") }
+            )
+            NavigationBarItem(
+                selected = currentRoute == Routes.MY,
+                onClick = { onSelect(Routes.MY) },
+                icon = { Icon(Icons.Default.Person, contentDescription = "마이") },
+                label = { Text("마이") }
+            )
+        }
     }
 }
 
