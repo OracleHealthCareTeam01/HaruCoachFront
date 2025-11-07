@@ -51,6 +51,8 @@ import java.util.Locale
 fun CognitiveTestScreen(navController: NavHostController) {
     // 뒤로가기 버튼 비활성화
     BackHandler(enabled = true) { /* 뒤로가기 버튼을 눌러도 아무 동작도 하지 않습니다. */ }
+
+    //사용설명서 다이얼로그 화면
     var showDialog2 by remember { mutableStateOf(true) }
     if (showDialog2) {
         CustomFullAlertDialog(
@@ -60,17 +62,22 @@ fun CognitiveTestScreen(navController: NavHostController) {
             }
         )
     }
+    //검사 그만하기 다이얼로그
+    var showDialog by remember { mutableStateOf(false) }
+
+    //검사시간
     val remainingTime = remember { mutableIntStateOf(30) }
+    //음성으로 입력받아 저장할 공간
     val recognizedText = remember { mutableStateOf("") }
-    var btnState by remember { mutableIntStateOf(1) }// 1. 버튼 상태를 관리하는 Int 변수
-    // 1 = 말하기, 2 = 대기, 3 = 종료
+    // 버튼 구분 코드 1 = 말하기, 2 = 대기, 3 = 종료
+    var btnState by remember { mutableIntStateOf(1) }
+
     var time by remember { mutableIntStateOf(1) }
     var numBer by remember { mutableIntStateOf(1) }
     val density = LocalDensity.current
     val fontSizeSp = with(density) { 20.dp.toSp() } // 👈 dp → sp 변환
     val fontSizeSp2 = with(density) { 30.dp.toSp() } // 👈 dp → sp 변환
 
-    var showDialog by remember { mutableStateOf(false) }
 
     // "다음" 버튼 로직
     val onNextClicked = {
@@ -82,6 +89,7 @@ fun CognitiveTestScreen(navController: NavHostController) {
             time = 1
         }
         else{
+            //홈화면 이동
             navController.navigate("home") {
                 // 백 스택에서 cognitiveTest 화면을 제거하여 뒤로 가기 버튼을 눌렀을 때 다시 돌아오지 않도록 합니다.
                 popUpTo("cognitiveTest") {
@@ -103,8 +111,7 @@ fun CognitiveTestScreen(navController: NavHostController) {
             }
         }
     }
-    Scaffold(
-    ) {
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -192,7 +199,7 @@ fun CognitiveTestScreen(navController: NavHostController) {
                 {
                     1 -> Color(0xFF00C853) // 초록색
                     2 -> Color(0xFFFFC107) // 노란색
-                    else -> Color(0xFFF44336) // 빨간색 (3 또는 그 외의 경우)
+                    else -> Color(0xFFF44336) // 빨간색
                 }
             }
 
@@ -412,6 +419,7 @@ fun CognitiveTestScreen(navController: NavHostController) {
                             // '검사 그만하기' 버튼 클릭 시
                             // 여기에 검사 종료 로직 추가
                             //home.kt로 이동
+                            showDialog = false
                             navController.navigate("home") {
                                 // 백 스택에서 cognitiveTest 화면을 제거하여 뒤로 가기 버튼을 눌렀을 때 다시 돌아오지 않도록 합니다.
                                 popUpTo("cognitiveTest") {
@@ -423,5 +431,5 @@ fun CognitiveTestScreen(navController: NavHostController) {
                 }
             }
         }
-    }
+
 }

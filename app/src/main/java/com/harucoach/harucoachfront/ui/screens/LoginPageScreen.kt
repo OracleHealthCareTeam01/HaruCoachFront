@@ -76,10 +76,14 @@ fun LoginScreen2(
                 )
             }
 
-            Spacer(Modifier.height(50.dp))
+            //Spacer(Modifier.height(50.dp))
 
             // 입력 폼
-            Column(Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+
 
                 // 아이디 라벨
                 Text(
@@ -182,5 +186,3 @@ fun LoginScreen2(
         }
     }
 }
-
-

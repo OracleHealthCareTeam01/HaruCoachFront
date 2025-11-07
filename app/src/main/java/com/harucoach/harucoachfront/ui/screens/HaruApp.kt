@@ -29,6 +29,8 @@ object Routes {
 fun HaruApp() {
     val nav = rememberNavController()
     val currentRoute = nav.currentRoute()
+    
+    //타이틀 명지정
     val topTitle = when (currentRoute) {
         Routes.HOME -> "홈"
         Routes.COGNITIVE -> "인지 능력 검사"
@@ -59,12 +61,17 @@ fun HaruApp() {
             startDestination = Routes.HOME,
             modifier = Modifier.padding(innerPadding)
         ) {
+            //하단 홈 버튼
             composable(Routes.HOME) { HomeScreen(onNavigate = { nav.navigate(it) }) }
+            //홈화면 인지능력검사
             composable(Routes.COGNITIVE) { CognitiveIntroScreen(onStart = { nav.navigate(Routes.COGNITIVE_TEST) }) }
+            //인지능력 검사 화면
             composable(Routes.COGNITIVE_TEST) { CognitiveTestScreen(nav) }
+            //오늘의 일기 
             composable(Routes.DIARY) {
                 //SimplePage("오늘의 일기")
             }
+            //오늘의 학습
             composable(Routes.LEARN) {
                 //SimplePage("오늘의 학습")
             }

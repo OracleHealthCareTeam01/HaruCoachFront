@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,12 +13,16 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.harucoach.harucoachfront.R
 
 
 @Composable
@@ -28,37 +33,32 @@ fun CustomFullAlertDialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false) // 화면 꽉 채우기
     ) {
+
         Surface(
             modifier = Modifier
                 .fillMaxWidth(),  // 좌우 꽉 채움
-
             color = Color.Transparent
+
         ) {
+
             CustomDialogContent(onDismissRequest)
         }
+
     }
 }
 
 @Composable
 fun CustomDialogContent(onDismissRequest: () -> Unit) {
+
     val density = LocalDensity.current
     val fontSizeSp2 = with(density) { 30.dp.toSp() } // 👈 dp → sp 변환
     val fontSizeSp = with(density) { 20.dp.toSp() }
-    Scaffold(
-        containerColor = Color.Transparent, // CustomDialogContent2의 배경을 투명하게 설정
-        bottomBar = {
-            BottomAppBar(
-                containerColor = Color.Transparent,
-                content = {
 
-                }
-            )
-        }
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp),
+                .fillMaxWidth(),
+                //.padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(22.dp))
@@ -87,7 +87,16 @@ fun CustomDialogContent(onDismissRequest: () -> Unit) {
                     }
                 }
             }
-            Card(
+            //버튼 아래 부분 오류가 ㅁ낳아서 이미지로 대체
+            val custom_full_alert_dialog   = R.drawable.custom_full_alert_dialog
+            Image(
+                painter = painterResource(id = custom_full_alert_dialog),
+                contentDescription = "프로필",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+            /*Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(80.dp),
@@ -153,60 +162,46 @@ fun CustomDialogContent(onDismissRequest: () -> Unit) {
                         )
                     },
 
-            ) {
+                ) {
             }
             Text(
                 text = "버튼을 클릭하면 녹음이 시작됩니다.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Black,
                 fontSize = fontSizeSp
-
             )
-            // 음성 인식 결과
         }
-        Column(
+        //하단 남은시간
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-        ){
-            Spacer(modifier = Modifier.weight(1f)) // This pushes content to the top
-            Row(
-                modifier = Modifier
-                    .height(80.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp) // 높이 조정 가능
-                        .drawBehind {
-                            val stroke = Stroke(
-                                width = 2.dp.toPx(),
-                                pathEffect = PathEffect.dashPathEffect(
-                                    floatArrayOf(10f, 10f),
-                                )
-                            )
-                            drawRoundRect(
-                                color = Color.Black,
-                                size = size,
-                                cornerRadius = CornerRadius(8.dp.toPx()),
-                                style = stroke
-                            )
-                        },
-
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "남은시간이 표시됩니다.",
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = fontSizeSp2
+                .align(Alignment.BottomCenter)
+                .padding(0.dp,0.dp,0.dp,75.dp)
+                .fillMaxWidth()
+                .height(80.dp) // 높이 조정 가능
+                .drawBehind {
+                    val stroke = Stroke(
+                        width = 2.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(
+                            floatArrayOf(10f, 10f),
+                            0f
+                        )
                     )
-                }
-            }
-            Spacer(modifier = Modifier.height(150.dp))
-        }
+                    drawRoundRect(
+                        color = Color.Black,
+                        size = size,
+                        cornerRadius = CornerRadius(8.dp.toPx()),
+                        style = stroke
+                    )
+                },
+
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "남은시간이 표시됩니다.",
+                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                fontSize = fontSizeSp2
+            )
+        }*/
     }
 }

@@ -33,7 +33,6 @@ fun CustomAlertDialog(
 
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
-
         val density = LocalDensity.current
         val fontSizeSp = with(density) { 20.dp.toSp() } // 👈 dp → sp 변환
         val fontSizeSp2 = with(density) { 25.dp.toSp() } // 👈 dp → sp 변환
@@ -118,8 +117,11 @@ fun CustomAlertDialog(
 @Composable
 fun CustomAlertDialogPreview() {
     CustomAlertDialog(
+        //다이얼로그 밖에 이벤트
         onDismissRequest = {},
+        //계속하기 버튼 이벤트
         onContinueClick = {},
+        //그만하기 버튼 이벤트
         onStopClick = {}
     )
 }

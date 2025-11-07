@@ -38,10 +38,18 @@ import com.harucoach.harucoachfront.R // Added R import
 fun ProfileScreen(
     nickname: String = "닉네임 님",
     versionLabel: String = "버전 1.0.0",
-    onEdit: () -> Unit = {},
-    onFaq: () -> Unit = {},
-    onNotice: () -> Unit = {},
-    onInquiry: () -> Unit = {}
+    onEdit: () -> Unit = {
+        //회원 정보 수정 버튼이벤트
+    },
+    onFaq: () -> Unit = {
+        //FAQ 버튼이벤트
+    },
+    onNotice: () -> Unit = {
+        //공지사항 버튼이벤트
+    },
+    onInquiry: () -> Unit = {
+        // 1대1 문의 사항 버튼 이벤트
+    }
 ) {
     val profileIcon   = R.drawable.profile
     val infoIcon      = R.drawable.info

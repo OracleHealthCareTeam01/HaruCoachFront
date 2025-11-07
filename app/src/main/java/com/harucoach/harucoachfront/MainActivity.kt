@@ -88,8 +88,17 @@ class MainActivity : ComponentActivity() {
                 HaruCoachFrontTheme {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = startDestination) {
-                        composable("login") { 
-                            LoginScreen2(onLoginClick = { navController.navigate("haruApp") }, onJoinClick = {}) 
+                        composable("login") {
+                            LoginScreen2(
+                                //로그인화면 듣어가기 버튼 클릭이벤트
+                                onLoginClick = {
+                                navController.navigate("haruApp") },
+                                //로그인화면 함께해요 버튼 클릭이벤트
+
+                                //회원가입 화면으로 이동예정
+                                onJoinClick = {
+
+                                })
                         }
                         composable("haruApp") { HaruApp() }
                     }
