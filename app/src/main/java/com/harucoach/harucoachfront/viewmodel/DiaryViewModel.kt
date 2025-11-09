@@ -13,6 +13,9 @@ import kotlinx.coroutines.launch  // 천천히 일하는 로봇을 부르는 주
 import java.time.LocalDate  // 날짜를 다루는 도구, 오늘 날짜를 알 수 있어요.
 import java.time.format.DateTimeFormatter  // 날짜를 "2025-11-09"처럼 예쁘게 바꿔주는 펜예요.
 import javax.inject.Inject
+import kotlin.collections.mapKeys
+import kotlin.collections.mapValues
+import kotlin.collections.set
 
 // 화면 상태를 나타내는 sealed class (간단한 상태 모음)
 // - Idle: 아무 일 없는 상태

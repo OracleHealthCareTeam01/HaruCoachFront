@@ -1,27 +1,56 @@
 package com.harucoach.harucoachfront.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
@@ -33,7 +62,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import kotlin.math.ceil
+import java.util.Locale
 
 /**
  * DiaryScreen: 한 줄씩 아주 쉬운 설명 주석이 달린 Compose 화면
@@ -106,14 +135,17 @@ fun DiaryScreen(
         // Card: 모서리 둥글고 배경색이 있는 상자
         Card(
             modifier = Modifier.fillMaxWidth(), // 가로 전체를 채움
-            shape = RoundedCornerShape(16.dp), // 모서리 둥글게
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp), // 모서리 둥글게
             colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF1FB)), // 배경색: 연하늘
             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp) // 그림자
         ) { // start Card
             Column(modifier = Modifier.padding(12.dp)) { // start Column inside Card
 
                 // 헤더: 왼쪽 이전 버튼, 가운데 현재 년월, 오른쪽 다음 버튼
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { // start Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) { // start Row
                     // 이전 달로 가는 버튼 (왼쪽 화살표)
                     IconButton(onClick = {
                         // 눌렀을 때 현재 페이지가 0보다 크면 한 페이지(한 달) 뒤로 이동
@@ -125,15 +157,25 @@ fun DiaryScreen(
                         }
                     }) { // start IconButton prev
                         // 실제로 화면에 보이는 아이콘
-                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "이전 달", tint = Color.Gray)
+                        Icon(
+                            Icons.Default.KeyboardArrowLeft,
+                            contentDescription = "이전 달",
+                            tint = Color.Gray
+                        )
                     } // end IconButton prev
 
                     Spacer(modifier = Modifier.weight(1f)) // 가운데 정렬을 위한 빈공간
 
                     // 가운데 텍스트: 현재 페이지의 YearMonth (예: November 2025)
                     val currentYM = range.getOrNull(pagerState.currentPage) ?: centerYearMonth
+                    Log.d("currentYM", currentYM.toString())
                     Text(
-                        text = "${currentYM.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${currentYM.year}",
+                        //text = "${currentYM.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${currentYM.year}",
+                        text = "${currentYM.year}년 ${
+                            currentYM.format(
+                                DateTimeFormatter.ofPattern("MMMM").withLocale(Locale.KOREAN)
+                            )
+                        }",
                         style = MaterialTheme.typography.titleMedium,
                         color = Color(0xFF111111)
                     )
@@ -149,7 +191,11 @@ fun DiaryScreen(
                             }
                         }
                     }) { // start IconButton next
-                        Icon(Icons.Default.KeyboardArrowRight, contentDescription = "다음 달", tint = Color.Gray)
+                        Icon(
+                            Icons.Default.KeyboardArrowRight,
+                            contentDescription = "다음 달",
+                            tint = Color.Gray
+                        )
                     } // end IconButton next
                 } // end Row (헤더)
 
@@ -167,7 +213,8 @@ fun DiaryScreen(
                     val ym = range[pageIndex] // 이 페이지가 나타내는 YearMonth
                     // 만약 현재 선택된 날짜가 이 페이지의 달이면 그 날짜를 선택으로 보여주고,
                     // 아니면 그 달의 1일을 선택된 것으로 보여줍니다.
-                    val selectedForPage = if (YearMonth.from(selectedDate) == ym) selectedDate else ym.atDay(1)
+                    val selectedForPage =
+                        if (YearMonth.from(selectedDate) == ym) selectedDate else ym.atDay(1)
 
                     // CalendarMonthView: 한 달치 달력을 그리는 함수(아래에 정의됨)
                     CalendarMonthView(
@@ -196,11 +243,14 @@ fun DiaryScreen(
         Spacer(modifier = Modifier.height(16.dp)) // 달력과 날짜 영역 사이 간격
 
         /* -------------------- C. 날짜 + 감정칩 영역 -------------------- */
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { // start Row date+mood
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) { // start Row date+mood
             // 왼쪽: 선택된 날짜를 크게 보여줍니다.
             Text(
                 text = selectedDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd")), // 예: 2025.11.08
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.weight(1f) // 가능한 공간을 꽉 채움
             )
 
@@ -208,7 +258,7 @@ fun DiaryScreen(
             var showMoodDialog by remember { mutableStateOf(false) } // 다이얼로그 보일지 말지 상태
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp)) // 모서리를 둥글게
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp)) // 모서리를 둥글게
                     .background(Color(0xFFF5F5F5)) // 연한 회색 배경
                     .clickable { showMoodDialog = true } // 누르면 다이얼로그를 켬
                     .padding(horizontal = 14.dp, vertical = 10.dp) // 내부 여백
@@ -235,7 +285,7 @@ fun DiaryScreen(
         /* -------------------- D. 일기 입력 카드 + 마이크 -------------------- */
         Card(
             modifier = Modifier.fillMaxWidth(), // 가로 전체
-            shape = RoundedCornerShape(12.dp), // 모서리 둥글게
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), // 모서리 둥글게
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // 그림자
         ) { // start Card diary
             Box(
@@ -261,7 +311,11 @@ fun DiaryScreen(
                         .size(56.dp), // 크기
                     containerColor = Color(0xFF2E7D32) // 버튼 배경색(녹색)
                 ) {
-                    Icon(Icons.Default.Mic, contentDescription = "mic", tint = Color.White) // 마이크 아이콘
+                    Icon(
+                        Icons.Default.Mic,
+                        contentDescription = "mic",
+                        tint = Color.White
+                    ) // 마이크 아이콘
                 }
             } // end Box
         } // end Card diary
@@ -269,7 +323,10 @@ fun DiaryScreen(
         Spacer(modifier = Modifier.height(16.dp)) // 입력카드와 버튼 사이 여백
 
         /* -------------------- E. 버튼 영역 (취소 / 저장) -------------------- */
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { // start Row buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) { // start Row buttons
             // 왼쪽: 취소 버튼 (테두리형)
             OutlinedButton(onClick = { onCancel() }, modifier = Modifier.weight(1f)) {
                 Text("취소")
@@ -307,7 +364,10 @@ fun DiaryScreen(
 
             is DiaryUiState.Error -> {
                 // 오류가 생겼을 때: 오류 메시지를 빨간색으로 보여줍니다.
-                Text("오류: ${(uiState as DiaryUiState.Error).message}", color = MaterialTheme.colorScheme.error)
+                Text(
+                    "오류: ${(uiState as DiaryUiState.Error).message}",
+                    color = MaterialTheme.colorScheme.error
+                )
             }
 
             else -> {

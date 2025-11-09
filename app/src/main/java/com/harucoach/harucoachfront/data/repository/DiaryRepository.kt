@@ -8,6 +8,7 @@ import java.time.LocalDate
 import kotlinx.coroutines.delay  // 시뮬레이션 지연
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.to
 
 /**
  * 일기 관련 사항 API 통신으로 불러오는 역활
@@ -23,12 +24,22 @@ class DiaryRepository @Inject constructor(private val apiService: ApiService) {
             // return response.entries.associateBy { it.date.format(DateTimeFormatter.ISO_LOCAL_DATE) }
             delay(500)  // 네트워크 지연 흉내
             return mapOf(
-                LocalDate.now().minusDays(3).toString() to DiaryEntry(LocalDate.now().minusDays(3), "😊", "좋은 날이었다."),
-                LocalDate.now().minusDays(7).toString() to DiaryEntry(LocalDate.now().minusDays(7), "😢", "슬픈 기억."),
-                LocalDate.now().minusDays(10).toString() to DiaryEntry(LocalDate.now().minusDays(10), "😐", "평범한 하루.")
+                LocalDate.now().minusDays(3).toString() to DiaryEntry(
+                    LocalDate.now().minusDays(3),
+                    "😊",
+                    "좋은 날이었다."
+                ),
+                LocalDate.now().minusDays(7).toString() to DiaryEntry(
+                    LocalDate.now().minusDays(7),
+                    "😢",
+                    "슬픈 기억."
+                ),
+                LocalDate.now().minusDays(10).toString() to DiaryEntry(
+                    LocalDate.now().minusDays(10), "😐", "평범한 하루."
+                )
             )
         } catch (e: Exception) {
-            throw Exception("데이터 로드 실패: ${e.message}")
+            throw kotlin.Exception("데이터 로드 실패: ${e.message}")
         }
     }
 
