@@ -78,6 +78,12 @@ dependencies {
 
     // Hilt를 Compose ViewModel과 사용하기 위함
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    // Accompanist Pager (horizontal swipe pager)
+    implementation("com.google.accompanist:accompanist-pager:0.34.0")
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.34.0")
+
+
 }
 
 // kapt { ... } 블록이 없다면 파일 하단에 추가

@@ -70,6 +70,7 @@ fun HaruApp() {
             //오늘의 일기 
             composable(Routes.DIARY) {
                 //SimplePage("오늘의 일기")
+                DiaryScreen(onCancel = { nav.popBackStack() })
             }
             //오늘의 학습
             composable(Routes.LEARN) {
