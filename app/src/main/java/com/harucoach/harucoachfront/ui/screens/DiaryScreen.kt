@@ -120,13 +120,13 @@ fun DiaryScreen(
             // 부분 인식 결과를 수신할지 여부 설정 (실시간 텍스트 업데이트에 사용)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
 
-            // 음성 입력이 완료되었다고 판단하기 위한 최대 무음 시간 (30초)
+           /* // 음성 입력이 완료되었다고 판단하기 위한 최대 무음 시간 (30초)
             putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 30000);
             // 음성 입력이 아마도 완료되었을 수 있다고 판단하기 위한 최대 무음 시간 (30초)
             putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 30000);
             // 음성 인식기가 최소한 유지되어야 하는 시간 (31초)
             // 이 시간 동안 음성이 없으면 타임아웃 오류 발생 가능
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 31000);
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 31000);*/
             // 언어 선호도만 반환할지 여부 (여기서는 true로 설정되어 있지만, 일반적으로 음성 인식을 위해서는 false)
             // 이 옵션이 true이면 실제 음성 인식은 수행되지 않고 언어 설정만 반환될 수 있음. 주의 필요.
             putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true)
