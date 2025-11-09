@@ -1,8 +1,12 @@
 package com.harucoach.harucoachfront
 
+import android.Manifest
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
@@ -28,9 +32,23 @@ import com.harucoach.harucoachfront.ui.screens.HaruApp // Import HaruApp
 
 @AndroidEntryPoint // 2. Hilt가 의존성을 주입할 진입점임을 선언
 class MainActivity : ComponentActivity() {
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        requestPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+                if (isGranted) {
+                    // 권한이 허용되면 토스트 메시지 표시
+                    Toast.makeText(this, "녹음 권한이 허용되었습니다.", Toast.LENGTH_SHORT).show()
+                }
+                else {
+                    // 권한이 거부되면 토스트 메시지 표시
+                    Toast.makeText(this, "녹음 권한이 거부되었습니다. 음성 인식을 사용할 수 없습니다.", Toast.LENGTH_LONG).show()
+                }
+            }
+        requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         // 토큰 있으면 홈 시작
         val prefsManager = PreferencesManager(this)
         val token = prefsManager.readAuthTokenBlocking()
@@ -83,13 +101,17 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+
         setContent {
             AppTheme{
                 HaruCoachFrontTheme {
                     val navController = rememberNavController()
+
                     NavHost(navController = navController, startDestination = startDestination) {
+
                         composable("login") {
                             LoginScreen2(
+
                                 //로그인화면 듣어가기 버튼 클릭이벤트
                                 onLoginClick = {
                                 navController.navigate("haruApp") },
@@ -98,7 +120,10 @@ class MainActivity : ComponentActivity() {
                                 //회원가입 화면으로 이동예정
                                 onJoinClick = {
 
-                                })
+                                }
+
+                            )
+
                         }
                         composable("haruApp") { HaruApp() }
                     }

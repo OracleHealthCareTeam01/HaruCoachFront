@@ -1,5 +1,12 @@
 package com.harucoach.harucoachfront.ui.screens
 
+import android.content.Intent
+import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -30,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -40,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,7 +58,139 @@ import java.util.Locale
 
 @Composable
 fun CognitiveTestScreen(navController: NavHostController) {
-    // 뒤로가기 버튼 비활성화
+
+    // 현재 Compose 컨텍스트에서 Context 객체를 가져옴
+    val context = LocalContext.current    // 뒤로가기 버튼 비활성화
+    // Compose 상태 변수들 정의
+    // `remember`와 `mutableStateOf`를 사용하여 상태가 변경될 때 UI가 자동으로 업데이트되도록 함
+    var recordedText by remember { mutableStateOf("녹음된 텍스트가 여기에 표시됩니다.") } // 녹음된 텍스트를 저장
+
+    var errorMessage by remember { mutableStateOf("") } // 오류 메시지를 저장
+    var isListening by remember { mutableStateOf(false) } // 음성 인식기 작동 여부
+
+    // SpeechRecognizer 인스턴스 생성 및 기억
+    // 컴포저블이 리컴포즈되어도 동일한 인스턴스를 유지
+    val speechRecognizer = remember { SpeechRecognizer.createSpeechRecognizer(context) }
+    // 음성 인식 인텐트 설정 및 기억
+    // 음성 인식 서비스에 전달할 추가 정보들을 정의
+    val speechRecognizerIntent = remember {
+        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            // 음성 인식 서비스를 호출하는 패키지 이름을 지정
+            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+            // 자유 형식 음성 인식을 위한 언어 모델 설정
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            // 기기의 기본 언어로 음성 인식 설정 (한국어 등)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+            // 부분 인식 결과를 수신할지 여부 설정 (실시간 텍스트 업데이트에 사용)
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+
+            // 음성 입력이 완료되었다고 판단하기 위한 최대 무음 시간 (30초)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 30000);
+            // 음성 입력이 아마도 완료되었을 수 있다고 판단하기 위한 최대 무음 시간 (30초)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 30000);
+            // 음성 인식기가 최소한 유지되어야 하는 시간 (31초)
+            // 이 시간 동안 음성이 없으면 타임아웃 오류 발생 가능
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 31000);
+            // 언어 선호도만 반환할지 여부 (여기서는 true로 설정되어 있지만, 일반적으로 음성 인식을 위해서는 false)
+            // 이 옵션이 true이면 실제 음성 인식은 수행되지 않고 언어 설정만 반환될 수 있음. 주의 필요.
+            putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true)
+        }
+    }
+
+    // DisposableEffect를 사용하여 SpeechRecognizer의 생명주기를 관리
+    // 컴포저블이 처음 구성될 때 리스너를 설정하고, 제거될 때 리소스를 해제함
+    DisposableEffect(Unit) {
+        // RecognitionListener 구현: 음성 인식 이벤트에 대한 콜백 처리
+        val listener = object : RecognitionListener {
+            // 음성 인식이 시작될 준비가 되었을 때 호출됨
+            override fun onReadyForSpeech(params: Bundle?) {
+                errorMessage = "" // 오류 메시지 초기화
+                isListening = true // 녹음 중 상태로 변경
+                Toast.makeText(context, "녹음 시작...", Toast.LENGTH_SHORT).show() // 녹음 시작 토스트 메시지
+            }
+
+            // 사용자가 말하기 시작했을 때 호출됨
+            override fun onBeginningOfSpeech() {
+                // 이 콜백에서 추가적인 동작을 수행할 수 있음
+            }
+
+            // 입력 볼륨(RMS)이 변경되었을 때 호출됨
+            override fun onRmsChanged(rmsdB: Float) {
+                // 입력 볼륨 변화에 따른 UI 피드백 등을 구현할 수 있음
+            }
+
+            // 음성 데이터 버퍼가 수신되었을 때 호출됨
+            override fun onBufferReceived(buffer: ByteArray?) {
+                // 수신된 음성 데이터 버퍼에 대한 처리를 할 수 있음
+            }
+
+            // 사용자가 말하기를 멈췄을 때 호출됨
+            override fun onEndOfSpeech() {
+                //isListening = false // 녹음 중 상태 해제
+                //Toast.makeText(context, "녹음 종료", Toast.LENGTH_SHORT).show() // 녹음 종료 토스트 메시지
+            }
+
+            // 음성 인식 중 오류가 발생했을 때 호출됨
+            override fun onError(error: Int) {
+                isListening = false // 오류 발생 시 녹음 중 상태 해제
+                // 발생한 오류 코드에 따라 적절한 오류 메시지 생성
+                val errorMsg = when (error) {
+                    SpeechRecognizer.ERROR_AUDIO -> "오디오 오류"
+                    SpeechRecognizer.ERROR_CLIENT -> "클라이언트 오류"
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "권한 부족"
+                    SpeechRecognizer.ERROR_NETWORK -> "네트워크 오류"
+                    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "네트워크 시간 초과"
+                    SpeechRecognizer.ERROR_NO_MATCH -> "일치하는 결과 없음"
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "음성 인식기 사용 중"
+                    SpeechRecognizer.ERROR_SERVER -> "서버 오류"
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "음성 입력 시간 초과"
+                    else -> "알 수 없는 오류: $error"
+                }
+                errorMessage = "오류: $errorMsg" // 오류 메시지 업데이트
+                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show() // 오류 메시지 토스트
+            }
+
+            // 최종 음성 인식 결과가 나왔을 때 호출됨
+            override fun onResults(results: Bundle?) {
+                // 인식된 텍스트 목록을 가져옴
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    recordedText = matches[0] // 첫 번째 인식 결과를 recordedText에 저장
+
+                }
+            }
+
+            // 부분적인 음성 인식 결과가 나왔을 때 호출됨 (실시간 업데이트에 사용)
+            override fun onPartialResults(partialResults: Bundle?) {
+                // 인식된 부분 텍스트 목록을 가져옴
+                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+
+                    Log.d("recordedText  테스트1",recordedText)
+
+                    recordedText = matches[0] // 첫 번째 부분 인식 결과를 recordedText에 표시
+
+
+                    Log.d("recordedText  테스트2",recordedText)
+                }
+            }
+
+            // 기타 이벤트가 발생했을 때 호출됨
+            override fun onEvent(eventType: Int, params: Bundle?) {
+                // 추가적인 이벤트를 처리할 수 있음
+            }
+        }
+
+        // SpeechRecognizer에 리스너 설정
+        speechRecognizer.setRecognitionListener(listener)
+
+        // 컴포저블이 화면에서 제거될 때 호출되는 클린업 람다
+        onDispose {
+            speechRecognizer.destroy() // SpeechRecognizer 리소스 해제
+        }
+    }
+
+
     BackHandler(enabled = true) { /* 뒤로가기 버튼을 눌러도 아무 동작도 하지 않습니다. */ }
 
     //사용설명서 다이얼로그 화면
@@ -74,6 +215,7 @@ fun CognitiveTestScreen(navController: NavHostController) {
 
     var time by remember { mutableIntStateOf(1) }
     var numBer by remember { mutableIntStateOf(1) }
+
     val density = LocalDensity.current
     val fontSizeSp = with(density) { 20.dp.toSp() } // 👈 dp → sp 변환
     val fontSizeSp2 = with(density) { 30.dp.toSp() } // 👈 dp → sp 변환
@@ -87,6 +229,7 @@ fun CognitiveTestScreen(navController: NavHostController) {
             remainingTime.intValue = 30
             // 여기에 다음 질문으로 넘어가는 로직 추가
             time = 1
+            recordedText ="";
         }
         else{
             //홈화면 이동
@@ -176,14 +319,21 @@ fun CognitiveTestScreen(navController: NavHostController) {
                     1 -> { // 현재 상태가 '말하기'이면
                         // 다음 상태로 변경 (예: 대기)
                         btnState = 2
-                        // 여기에 녹음 시작 등의 로직 추가
                         time = 2;
+
+                        // 여기에 녹음 시작 등의 로직 추가
+                        recordedText = "" // 녹음 시작 시 안내 메시지 표시
+                        errorMessage = "" // 오류 메시지 초기화
+                        speechRecognizer.startListening(speechRecognizerIntent) // 음성 인식 시작
+
                     }
                     2 -> { // 현재 상태가 '대기'이면
                         // 다음 상태로 변경 (예: 종료)
                         btnState = 3
+                        //recognizedText.value = "음성인식 완료"
+
                         // 여기에 녹음 종료 로직 추가
-                        recognizedText.value = "음성인식 완료"
+                        speechRecognizer.stopListening()
                     }
                     3 -> { // 현재 상태가 '종료'이면
                         //아무동작 안하기
@@ -286,8 +436,8 @@ fun CognitiveTestScreen(navController: NavHostController) {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     TextField(
-                        value = recognizedText.value,
-                        onValueChange = { recognizedText.value = it },
+                        value = recordedText,
+                        onValueChange = { recordedText = it },
                         modifier = Modifier.fillMaxWidth(),
                         readOnly = false,
                         textStyle = MaterialTheme.typography.bodyLarge.copy(
