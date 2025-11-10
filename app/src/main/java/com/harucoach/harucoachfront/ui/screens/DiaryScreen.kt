@@ -118,16 +118,17 @@ fun DiaryScreen(
             // 기기의 기본 언어로 음성 인식 설정 (한국어 등)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
             // 부분 인식 결과를 수신할지 여부 설정 (실시간 텍스트 업데이트에 사용)
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            //putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
 
-           /* // 음성 입력이 완료되었다고 판단하기 위한 최대 무음 시간 (30초)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 30000);
-            // 음성 입력이 아마도 완료되었을 수 있다고 판단하기 위한 최대 무음 시간 (30초)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 30000);
-            // 음성 인식기가 최소한 유지되어야 하는 시간 (31초)
+             // 음성 입력이 완료되었다고 판단하기 위한 최대 무음 시간 (3초)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 3000);
+            // 음성 입력이 아마도 완료되었을 수 있다고 판단하기 위한 최대 무음 시간 (3초)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000);
+            // 음성 인식기가 최소한 유지되어야 하는 시간 (10초)
             // 이 시간 동안 음성이 없으면 타임아웃 오류 발생 가능
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 31000);*/
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 10000);
             // 언어 선호도만 반환할지 여부 (여기서는 true로 설정되어 있지만, 일반적으로 음성 인식을 위해서는 false)
+
             // 이 옵션이 true이면 실제 음성 인식은 수행되지 않고 언어 설정만 반환될 수 있음. 주의 필요.
             putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true)
         }
@@ -201,13 +202,7 @@ fun DiaryScreen(
                 // 인식된 부분 텍스트 목록을 가져옴
                 val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
-
-                    Log.d("recordedText  테스트1",recordedText)
-
                     recordedText = matches[0] // 첫 번째 부분 인식 결과를 recordedText에 표시
-
-
-                    Log.d("recordedText  테스트2",recordedText)
                 }
             }
 

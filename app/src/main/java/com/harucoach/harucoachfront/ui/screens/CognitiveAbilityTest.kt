@@ -60,14 +60,29 @@ import java.util.Locale
 
 @Composable
 fun CognitiveTestScreen(navController: NavHostController) {
+    //검사 그만하기 다이얼로그
+    var showDialog by remember { mutableStateOf(false) }
 
+    //검사시간
+    val remainingTime = remember { mutableIntStateOf(30) }
+    //음성으로 입력받아 저장할 공간
+    val recognizedText = remember { mutableStateOf("") }
+    // 버튼 구분 코드 1 = 말하기, 2 = 대기, 3 = 종료
+    var btnState by remember { mutableIntStateOf(1) }
+
+    var time by remember { mutableIntStateOf(1) }
+    var numBer by remember { mutableIntStateOf(1) }
+
+    val density = LocalDensity.current
+    val fontSizeSp = with(density) { 20.dp.toSp() } // 👈 dp → sp 변환
+    val fontSizeSp2 = with(density) { 30.dp.toSp() } // 👈 dp → sp 변환
 
     // 현재 Compose 컨텍스트에서 Context 객체를 가져옴
     val context = LocalContext.current
     // 뒤로가기 버튼 비활성화
     // Compose 상태 변수들 정의
     // `remember`와 `mutableStateOf`를 사용하여 상태가 변경될 때 UI가 자동으로 업데이트되도록 함
-    var recordedText by remember { mutableStateOf("녹음된 텍스트가 여기에 표시됩니다.") } // 녹음된 텍스트를 저장
+    var recordedText by remember { mutableStateOf("") } // 녹음된 텍스트를 저장
 
     var errorMessage by remember { mutableStateOf("") } // 오류 메시지를 저장
     var isListening by remember { mutableStateOf(false) } // 음성 인식기 작동 여부
@@ -86,15 +101,15 @@ fun CognitiveTestScreen(navController: NavHostController) {
             // 기기의 기본 언어로 음성 인식 설정 (한국어 등)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
             // 부분 인식 결과를 수신할지 여부 설정 (실시간 텍스트 업데이트에 사용)
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            //putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
 
-            // 음성 입력이 완료되었다고 판단하기 위한 최대 무음 시간 (30초)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 30000);
-            // 음성 입력이 아마도 완료되었을 수 있다고 판단하기 위한 최대 무음 시간 (30초)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 30000);
-            // 음성 인식기가 최소한 유지되어야 하는 시간 (31초)
+            // 음성 입력이 완료되었다고 판단하기 위한 최대 무음 시간 (3초)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 3000);
+            // 음성 입력이 아마도 완료되었을 수 있다고 판단하기 위한 최대 무음 시간 (3초)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000);
+            // 음성 인식기가 최소한 유지되어야 하는 시간 (10초)
             // 이 시간 동안 음성이 없으면 타임아웃 오류 발생 가능
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 31000);
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 10000);
             // 언어 선호도만 반환할지 여부 (여기서는 true로 설정되어 있지만, 일반적으로 음성 인식을 위해서는 false)
             // 이 옵션이 true이면 실제 음성 인식은 수행되지 않고 언어 설정만 반환될 수 있음. 주의 필요.
             putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true)
@@ -134,15 +149,21 @@ fun CognitiveTestScreen(navController: NavHostController) {
                 errorMessage = "오류: $errorMsg" // 오류 메시지 업데이트
                 Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show() // 오류 메시지 토스트
             }
+            //완료 리턴 결과 값
             override fun onResults(results: Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
-                    recordedText = matches[0] // 첫 번째 인식 결과를 recordedText에 저장
+
+                    recordedText = matches[0]
+                    Log.d("recordedText 테스트0", recordedText)
+                    btnState = 3
                 }
             }
+            //부분 리턴값
             override fun onPartialResults(partialResults: Bundle?) {
                 val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
+
                     Log.d("recordedText 테스트1", recordedText)
                     recordedText = matches[0] // 첫 번째 부분 인식 결과를 recordedText에 표시
                     Log.d("recordedText 테스트2", recordedText)
@@ -183,22 +204,7 @@ fun CognitiveTestScreen(navController: NavHostController) {
             }
         )
     }
-    //검사 그만하기 다이얼로그
-    var showDialog by remember { mutableStateOf(false) }
 
-    //검사시간
-    val remainingTime = remember { mutableIntStateOf(30) }
-    //음성으로 입력받아 저장할 공간
-    val recognizedText = remember { mutableStateOf("") }
-    // 버튼 구분 코드 1 = 말하기, 2 = 대기, 3 = 종료
-    var btnState by remember { mutableIntStateOf(1) }
-
-    var time by remember { mutableIntStateOf(1) }
-    var numBer by remember { mutableIntStateOf(1) }
-
-    val density = LocalDensity.current
-    val fontSizeSp = with(density) { 20.dp.toSp() } // 👈 dp → sp 변환
-    val fontSizeSp2 = with(density) { 30.dp.toSp() } // 👈 dp → sp 변환
 
 
     // "다음" 버튼 로직
