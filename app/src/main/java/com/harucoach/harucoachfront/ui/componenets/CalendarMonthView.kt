@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.componenets
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -19,10 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.harucoach.harucoachfront.R
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.math.ceil
@@ -138,10 +142,27 @@ fun CalendarMonthView(
                                         //     - mood가 없으면 원래처럼 날짜 숫자를 보여줘요.
                                         if (mood != null) {
                                             // 이모지가 있으면 이모지만 보여줍니다.
-                                            Text(
+                                            /*Text(
                                                 text = mood,               // 예: "😊"
                                                 fontSize = 20.sp,          // 조금 더 크게 보여줌
                                                 modifier = Modifier.padding(4.dp)
+                                            )*/
+                                            Image(
+                                                painter = painterResource(id = when(mood) {
+                                                    "행복함"-> R.drawable.happiness
+                                                    "보통" -> R.drawable.normal_feelings
+                                                    "우울함"-> R.drawable.depressed
+                                                    "화남"-> R.drawable.aggro
+                                                    "차분함"-> R.drawable.calm
+                                                    "생각중"-> R.drawable.thinking
+                                                    "설렘"-> R.drawable.excitement
+                                                    "피곤함"-> R.drawable.tired
+                                                    "아픔"-> R.drawable.pain
+                                                    "고마움"-> R.drawable.thanks
+                                                    else -> R.drawable.upset
+                                                }),
+                                                contentDescription = mood,
+                                                modifier = Modifier.size(20.dp) // 이미지 크기 조절
                                             )
                                         } else {
                                             // 이모지가 없으면 날짜 숫자를 보여줍니다.

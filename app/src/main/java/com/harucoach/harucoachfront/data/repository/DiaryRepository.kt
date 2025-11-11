@@ -26,16 +26,16 @@ class DiaryRepository @Inject constructor(private val apiService: ApiService) {
             return mapOf(
                 LocalDate.now().minusDays(3).toString() to DiaryEntry(
                     LocalDate.now().minusDays(3),
-                    "😊",
+                    "행복함",
                     "좋은 날이었다."
                 ),
                 LocalDate.now().minusDays(7).toString() to DiaryEntry(
                     LocalDate.now().minusDays(7),
-                    "😢",
+                    "우울함",
                     "슬픈 기억."
                 ),
                 LocalDate.now().minusDays(10).toString() to DiaryEntry(
-                    LocalDate.now().minusDays(10), "😐", "평범한 하루."
+                    LocalDate.now().minusDays(10), "보통", "평범한 하루."
                 )
             )
         } catch (e: Exception) {
