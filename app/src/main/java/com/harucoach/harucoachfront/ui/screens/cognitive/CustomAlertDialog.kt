@@ -1,4 +1,4 @@
-package com.harucoach.harucoachfront.ui.screens
+package com.harucoach.harucoachfront.ui.screens.cognitive
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement

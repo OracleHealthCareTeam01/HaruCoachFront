@@ -1,4 +1,4 @@
-package com.harucoach.harucoachfront.ui.screens
+package com.harucoach.harucoachfront.ui.screens.cognitive
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -20,11 +20,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.harucoach.harucoachfront.ui.theme.HaruGreen
+import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
 
 @Composable
 fun CognitiveIntroScreen(
-    onStart: () -> Unit = {}
+    onStart: () -> Unit = {},
+    viewModel: CognitiveViewModel = hiltViewModel()
 ) {
     // Scaffold의 Top/BottomBar는 HaruApp에서 이미 제공하니 여기서는 본문만
     Column(
@@ -70,6 +73,7 @@ fun CognitiveIntroScreen(
         }
 
         // 하단 시작 버튼
+        // TODO viewModel.loadQuestions() 추가
         Button(
             onClick = onStart, // 아직 로직 없으면 비워둬도 OK
             modifier = Modifier

@@ -2,6 +2,8 @@ package com.harucoach.harucoachfront.data.remote
 
 
 
+import com.harucoach.harucoachfront.data.models.CognitiveQuestionResponse
+import com.harucoach.harucoachfront.data.models.CognitiveResult
 import com.harucoach.harucoachfront.data.models.DiaryEntry
 import com.harucoach.harucoachfront.data.models.DiaryListResponse
 import com.harucoach.harucoachfront.data.models.LoginRequest
@@ -20,6 +22,15 @@ interface ApiService  {
     @FormUrlEncoded
     suspend fun login(@Field("username") username: String, @Field("password") password: String): LoginResponse
 
+
+
+
+    // TODO 임시 인지 검사 기능 관련 end-point 추가, 변경 요망 (중단 했을때 로직 추가)
+    @GET("/cognitive/start")
+    suspend fun getCognitiveQuestions(): CognitiveQuestionResponse
+
+    @POST("/cognitive/result")
+    suspend fun submitCognitiveAnswers(@Body anwsers: CognitiveQuestionResponse): CognitiveResult
 
 
 
