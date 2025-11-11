@@ -1,6 +1,13 @@
 package com.harucoach.harucoachfront.ui.screens
 
+import android.content.Intent
+import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,8 +43,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,13 +56,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
+import com.harucoach.harucoachfront.R
 import com.harucoach.harucoachfront.ui.componenets.CalendarMonthView
 import com.harucoach.harucoachfront.ui.componenets.MoodSelectDialog
 import com.harucoach.harucoachfront.viewmodel.DiaryUiState
@@ -84,7 +95,122 @@ fun DiaryScreen(
     viewModel: DiaryViewModel = hiltViewModel(), // 데이터와 동작을 관리하는 친구(뷰모델)를 받아옵니다.
     onCancel: () -> Unit = {}, // 취소 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
     onSave: () -> Unit = {} // 저장 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
+
 ) {
+
+    // 현재 Compose 컨텍스트에서 Context 객체를 가져옴
+    val context = LocalContext.current    // 뒤로가기 버튼 비활성화
+    // Compose 상태 변수들 정의
+    // `remember`와 `mutableStateOf`를 사용하여 상태가 변경될 때 UI가 자동으로 업데이트되도록 함
+    var recordedText by remember { mutableStateOf("") } // 녹음된 텍스트를 저장
+
+    var errorMessage by remember { mutableStateOf("") } // 오류 메시지를 저장
+    var isListening by remember { mutableStateOf(false) } // 음성 인식기 작동 여부
+
+    // SpeechRecognizer 인스턴스 생성 및 기억
+    // 컴포저블이 리컴포즈되어도 동일한 인스턴스를 유지
+    val speechRecognizer = remember { SpeechRecognizer.createSpeechRecognizer(context) }
+    // 음성 인식 인텐트 설정 및 기억
+    // 음성 인식 서비스에 전달할 추가 정보들을 정의
+    val speechRecognizerIntent = remember {
+        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            // 음성 인식 서비스를 호출하는 패키지 이름을 지정
+            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+            // 자유 형식 음성 인식을 위한 언어 모델 설정
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            // 기기의 기본 언어로 음성 인식 설정 (한국어 등)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+
+        }
+    }
+
+    // DisposableEffect를 사용하여 SpeechRecognizer의 생명주기를 관리
+    // 컴포저블이 처음 구성될 때 리스너를 설정하고, 제거될 때 리소스를 해제함
+    DisposableEffect(Unit) {
+        // RecognitionListener 구현: 음성 인식 이벤트에 대한 콜백 처리
+        val listener = object : RecognitionListener {
+            // 음성 인식이 시작될 준비가 되었을 때 호출됨
+            override fun onReadyForSpeech(params: Bundle?) {
+                errorMessage = "" // 오류 메시지 초기화
+                isListening = true // 녹음 중 상태로 변경
+                Toast.makeText(context, "녹음 시작...", Toast.LENGTH_SHORT).show() // 녹음 시작 토스트 메시지
+            }
+
+            // 사용자가 말하기 시작했을 때 호출됨
+            override fun onBeginningOfSpeech() {
+                // 이 콜백에서 추가적인 동작을 수행할 수 있음
+            }
+
+            // 입력 볼륨(RMS)이 변경되었을 때 호출됨
+            override fun onRmsChanged(rmsdB: Float) {
+                // 입력 볼륨 변화에 따른 UI 피드백 등을 구현할 수 있음
+            }
+
+            // 음성 데이터 버퍼가 수신되었을 때 호출됨
+            override fun onBufferReceived(buffer: ByteArray?) {
+                // 수신된 음성 데이터 버퍼에 대한 처리를 할 수 있음
+            }
+
+            // 사용자가 말하기를 멈췄을 때 호출됨
+            override fun onEndOfSpeech() {
+                //isListening = false // 녹음 중 상태 해제
+                //Toast.makeText(context, "녹음 종료", Toast.LENGTH_SHORT).show() // 녹음 종료 토스트 메시지
+            }
+
+            // 음성 인식 중 오류가 발생했을 때 호출됨
+            override fun onError(error: Int) {
+                isListening = false // 오류 발생 시 녹음 중 상태 해제
+                // 발생한 오류 코드에 따라 적절한 오류 메시지 생성
+                val errorMsg = when (error) {
+                    SpeechRecognizer.ERROR_AUDIO -> "오디오 오류"
+                    SpeechRecognizer.ERROR_CLIENT -> "클라이언트 오류"
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "권한 부족"
+                    SpeechRecognizer.ERROR_NETWORK -> "네트워크 오류"
+                    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "네트워크 시간 초과"
+                    SpeechRecognizer.ERROR_NO_MATCH -> "일치하는 결과 없음"
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "음성 인식기 사용 중"
+                    SpeechRecognizer.ERROR_SERVER -> "서버 오류"
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "음성 입력 시간 초과"
+                    else -> "알 수 없는 오류: $error"
+                }
+                errorMessage = "오류: $errorMsg" // 오류 메시지 업데이트
+                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show() // 오류 메시지 토스트
+            }
+
+            // 최종 음성 인식 결과가 나왔을 때 호출됨
+            override fun onResults(results: Bundle?) {
+                // 인식된 텍스트 목록을 가져옴
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    recordedText += " " + matches[0] // 첫 번째 인식 결과를 recordedText에 저장
+
+                }
+            }
+
+            // 부분적인 음성 인식 결과가 나왔을 때 호출됨 (실시간 업데이트에 사용)
+            override fun onPartialResults(partialResults: Bundle?) {
+                // 인식된 부분 텍스트 목록을 가져옴
+                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+               /* if (!matches.isNullOrEmpty()) {
+                    recordedText = matches[0] // 첫 번째 부분 인식 결과를 recordedText에 표시
+                }*/
+            }
+
+            // 기타 이벤트가 발생했을 때 호출됨
+            override fun onEvent(eventType: Int, params: Bundle?) {
+                // 추가적인 이벤트를 처리할 수 있음
+            }
+        }
+
+        // SpeechRecognizer에 리스너 설정
+        speechRecognizer.setRecognitionListener(listener)
+
+        // 컴포저블이 화면에서 제거될 때 호출되는 클린업 람다
+        onDispose {
+            speechRecognizer.destroy() // SpeechRecognizer 리소스 해제
+        }
+    }
+
     // UI가 보여줄 값들을 ViewModel에서 가져옵니다.
     // collectAsState()는 '실시간으로 값이 바뀌면 UI도 따라 바뀌게' 해주는 도구예요.
     val uiState by viewModel.uiState.collectAsState()            // 화면의 상태 (로딩, 저장중 등)
@@ -92,6 +218,7 @@ fun DiaryScreen(
     val text by viewModel.currentText.collectAsState()           // 일기 텍스트 내용
     val mood by viewModel.currentMood.collectAsState()           // 현재 선택된 감정(이모지)
     // end state reads
+    recordedText = text;
 
     // 코루틴 스코프를 가져옵니다. 버튼을 누르면 이 안에서 애니메이션 같은 작업을 할 거예요.
     val coroutineScope = rememberCoroutineScope() // 버튼 클릭 등에서 비동기 작업을 안전하게 실행합니다.
@@ -123,11 +250,27 @@ fun DiaryScreen(
     val moodMap by viewModel.moodMap.collectAsState()
     // end moodMap
 
+
+    // end when uiState
+    val scrollState = rememberScrollState()
+
+    val isAtBottom by remember {
+        derivedStateOf {
+            // 최대 스크롤 값과 현재 스크롤 값이 같으면 최하단 도달
+            scrollState.value >= scrollState.maxValue
+        }
+    }
+    LaunchedEffect(isAtBottom) {
+        if (isAtBottom) {
+            // 최하단 도달 시 추가 데이터 로드 등 필요한 작업 수행
+            Log.d("최하단에 도달했습니다!","여기에 화면 전환 시작")
+        }
+    }
     /* -------------------- 화면 본문: 세로로 쭉 쌓이는 레이아웃 -------------------- */
     Column(
         modifier = Modifier
             .fillMaxSize() // 화면 전체를 채움
-            .verticalScroll(rememberScrollState()) // 화면을 위아래로 스크롤할 수 있게 함
+            .verticalScroll(scrollState) // 화면을 위아래로 스크롤할 수 있게 함
             .padding(16.dp) // 화면 가장자리 여백
     ) { // start Column
 
@@ -229,14 +372,8 @@ fun DiaryScreen(
                     )
                 } // end HorizontalPager page lambda
 
-                // 페이지 위치를 표시해 주는 작은 점(인디케이터)
-                HorizontalPagerIndicator(
-                    pagerState = pagerState,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(top = 8.dp),
-                    activeColor = MaterialTheme.colorScheme.primary
-                )
+                // 페이지 위치를 표시해 주는 작은 점(인디케이터)아래쪽 여백이 너무 많아서 삭제
+
             } // end Column inside Card
         } // end Card (달력 카드)
 
@@ -263,7 +400,30 @@ fun DiaryScreen(
                     .clickable { showMoodDialog = true } // 누르면 다이얼로그를 켬
                     .padding(horizontal = 14.dp, vertical = 10.dp) // 내부 여백
             ) {
-                Text(text = "$mood", color = Color(0xFF222222)) // 현재 감정과 간단한 텍스트
+                Row(verticalAlignment = Alignment.CenterVertically) { // Row로 감싸서 이미지와 텍스트를 나란히 배치
+                    Image(
+                        painter = painterResource(id = when("$mood") {
+                            "행복함"-> R.drawable.happiness
+                            "보통" -> R.drawable.normal_feelings
+                            "우울함"-> R.drawable.depressed
+                            "화남"-> R.drawable.aggro
+                            "차분함"-> R.drawable.calm
+                            "생각중"-> R.drawable.thinking
+                            "설렘"-> R.drawable.excitement
+                            "피곤함"-> R.drawable.tired
+                            "아픔"-> R.drawable.pain
+                            "고마움"-> R.drawable.thanks
+                            else -> R.drawable.upset
+                        }),
+                        contentDescription = "$mood",
+                        modifier = Modifier.size(48.dp) // 이미지 크기 조절
+                    )
+                    Text(
+                        text = "$mood",
+                        color = Color(0xFF222222),
+                        modifier = Modifier.padding(start = 8.dp) // 이미지와 텍스트 사이 간격 추가
+                    ) // 현재 감정과 간단한 텍스트
+                }
             }
 
             // 감정 선택 다이얼로그
@@ -296,8 +456,8 @@ fun DiaryScreen(
             ) { // start Box
                 // 사용자가 글을 쓰는 칸 (TextField)
                 TextField(
-                    value = text, // 지금 화면에 보이는 글
-                    onValueChange = { viewModel.updateText(it) }, // 글이 바뀌면 ViewModel에 알려줌
+                    value = recordedText, // 지금 화면에 보이는 글
+                    onValueChange = { recordedText = it }, // 글이 바뀌면 recordedText에 알려줌
                     placeholder = { Text("오늘의 일기를 써보세요") }, // 아무 글도 없을 때 보여주는 회색 안내문
                     modifier = Modifier.fillMaxSize(), // 박스 전체를 채움
                     colors = TextFieldDefaults.colors() // 색상 기본값 사용
@@ -305,7 +465,12 @@ fun DiaryScreen(
 
                 // 오른쪽 아래의 둥근 마이크 버튼 (FloatingActionButton 모양)
                 FloatingActionButton(
-                    onClick = { /* TODO: 음성 인식 기능 연결 */ }, // 나중에 음성 입력을 연결할 자리
+                    onClick = { /* TODO: 음성 인식 기능 연결 */
+                        // 여기에 녹음 시작 등의 로직 추가
+                        //recordedText = "" // 녹음 시작 시 안내 메시지 표시
+                        errorMessage = "" // 오류 메시지 초기화
+                        speechRecognizer.startListening(speechRecognizerIntent) // 음성 인식 시작
+                    }, // 나중에 음성 입력을 연결할 자리
                     modifier = Modifier
                         .align(Alignment.BottomEnd) // 박스의 오른쪽 아래에 붙임
                         .size(56.dp), // 크기
@@ -338,8 +503,13 @@ fun DiaryScreen(
             // 오른쪽: 저장 버튼 (채워진 녹색)
             Button(
                 onClick = {
+                    // recordedText의 현재 내용을 ViewModel에 전달
+                    viewModel.updateText(recordedText)
+                    Log.d("recordedText 테스트", recordedText)
                     viewModel.saveDiary() // 저장 로직을 실행 (ViewModel에서 처리)
                     onSave() // 외부 콜백(예: 화면 닫기) 실행
+
+
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
@@ -373,8 +543,7 @@ fun DiaryScreen(
             else -> {
                 // 그 밖의 상태(Idle 등)은 아무 것도 안 함
             }
-        } // end when uiState
-
+        }
     } // end Column (전체 화면)
 } // end DiaryScreen
 

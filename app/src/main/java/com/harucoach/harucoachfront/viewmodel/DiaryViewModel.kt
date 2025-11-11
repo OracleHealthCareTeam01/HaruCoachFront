@@ -56,7 +56,7 @@ class DiaryViewModel @Inject constructor(
     val currentText: StateFlow<String> = _currentText.asStateFlow()
     // end currentText
 
-    private val _currentMood = MutableStateFlow("🙂 보통") // 현재 선택된 감정(이모지 + 설명)
+    private val _currentMood = MutableStateFlow("보통") // 현재 선택된 감정(이모지 + 설명)
     val currentMood: StateFlow<String> = _currentMood.asStateFlow()
     // end currentMood
 
@@ -178,7 +178,7 @@ class DiaryViewModel @Inject constructor(
                     _currentText.value = entry.text
                 } else {
                     // 없으면 기본값으로 초기화
-                    _currentMood.value = "🙂 보통"
+                    _currentMood.value = "보통"
                     _currentText.value = ""
                 }
 
