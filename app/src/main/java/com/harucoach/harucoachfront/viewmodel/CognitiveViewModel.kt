@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.harucoach.harucoachfront.data.models.AnswerItem
@@ -31,7 +32,7 @@ class CognitiveViewModel @Inject constructor(
 
     init {
         // 화면 진입 시 자동으로 10문항 로드
-        startTest(userId = 1, count = 10)
+        startTest(userId = 2, count = 10)
     }
 
     fun startTest(userId: Int = 1, count: Int = 10, category: String? = null) {
@@ -44,7 +45,8 @@ class CognitiveViewModel @Inject constructor(
                     sessionId = res.sessionId,
                     questions = res.questions,
                     answers = emptyMap(),
-                )
+
+                    )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     loading = false, error = "시작 실패: ${e.message}"

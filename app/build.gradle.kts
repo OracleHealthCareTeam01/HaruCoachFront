@@ -67,7 +67,8 @@ dependencies {
 
     implementation("com.squareup.retrofit2:retrofit:2.11.0")  // Retrofit for API calls (호환 버전: Kotlin 2.0과 Compose 2024.09 OK)
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")  // JSON 파싱
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")//
+
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")  // ViewModel과 Compose 통합 (기존 lifecycleRuntimeKtx 2.6.1 업그레이드 추천)
 
     implementation("androidx.datastore:datastore-preferences:1.1.2") // datastore

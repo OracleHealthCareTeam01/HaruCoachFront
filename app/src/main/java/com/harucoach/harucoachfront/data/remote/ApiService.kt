@@ -1,10 +1,11 @@
 package com.harucoach.harucoachfront.data.remote
 
+
+
 import com.harucoach.harucoachfront.data.models.*
 import retrofit2.http.*
 
-interface ApiService {
-
+interface ApiService  {
     //폼 방식
     @FormUrlEncoded
     @POST("auth/login")
