@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.screens.cognitive
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,10 +47,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.google.gson.Gson
 import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
 import com.harucoach.harucoachfront.viewmodel.VoiceRecognitionViewModel
 import kotlinx.coroutines.delay
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 import java.util.Locale
+import kotlin.math.log
 
 @Composable
 fun CognitiveTestScreen(
@@ -56,6 +63,7 @@ fun CognitiveTestScreen(
     cogViewModel: CognitiveViewModel = hiltViewModel(),
     viewModel: VoiceRecognitionViewModel = viewModel()
 ) {
+
     var recordedText by viewModel.recordedText //음성 인식된 값
     val btnState by viewModel.btnState //버튼 상태 1:말하기 2:대기 3:종료
     val remainingTime = remember { mutableIntStateOf(30) } //타이머 시간
@@ -63,9 +71,18 @@ fun CognitiveTestScreen(
     val fontSizeSp = with(density) { 20.dp.toSp() }
     val fontSizeSp2 = with(density) { 30.dp.toSp() }
     var numBer by remember { mutableIntStateOf(1) } //질문 번호
+    var test by remember { mutableStateOf("") } //질문
+
+
+    val loginResult by cogViewModel.uiState.collectAsState()
+    val sessionId = loginResult.sessionId
+    val questions = loginResult.questions
+
     var showDialog by remember { mutableStateOf(false) }//검사 그만하기 다이얼로그
     var showDialog2 by remember { mutableStateOf(true) }//화면 시작 다이얼로그
-    
+
+
+
     //다음 버튼 클릭 이벤트
     // TODO cogViewModel.submitAnswers
     val onNextClicked = {
@@ -74,7 +91,10 @@ fun CognitiveTestScreen(
             remainingTime.intValue = 30
             viewModel.btnState.value = 1
             viewModel.recordedText.value = ""
-            viewModel.speak("올해가 몇년도 인가요?")
+            val q = questions[numBer-1]
+            viewModel.speak(" ${q.text}")
+            test = " ${q.text}"
+
         } else {
             navController.navigate("cognitive_waiting") {
                 popUpTo("cognitiveTest") { inclusive = true }
@@ -96,7 +116,7 @@ fun CognitiveTestScreen(
     }
 
     BackHandler(enabled = true) {}
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -119,9 +139,10 @@ fun CognitiveTestScreen(
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.Center
             ) {
+
                 Text("질문 $numBer / 10", color = Color.Gray)
                 Text(
-                    text = "올해가 몇년도 인가요?",
+                    text = test,
                     //style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -310,7 +331,9 @@ fun CognitiveTestScreen(
         CustomFullAlertDialog(
             onDismissRequest = {
                 showDialog2 = false
-                viewModel.speak("올해가 몇년도 인가요?")
+                val q = questions[numBer-1]
+                viewModel.speak(" ${q.text}")
+                test = " ${q.text}"
             }
         )
     }

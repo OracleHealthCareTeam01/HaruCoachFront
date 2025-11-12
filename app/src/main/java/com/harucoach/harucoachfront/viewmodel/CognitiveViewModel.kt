@@ -1,63 +1,93 @@
 package com.harucoach.harucoachfront.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.harucoach.harucoachfront.data.models.CognitiveQuestionResponse
-import com.harucoach.harucoachfront.data.models.CognitiveResult
-import com.harucoach.harucoachfront.data.models.CognitiveUiState
-import com.harucoach.harucoachfront.data.models.Point
+import com.harucoach.harucoachfront.data.models.AnswerItem
+import com.harucoach.harucoachfront.data.models.Question
+import com.harucoach.harucoachfront.data.models.ResultResponse
 import com.harucoach.harucoachfront.data.repository.CognitiveRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class CognitiveUiState(
+    val loading: Boolean = false,
+    val sessionId: Long? = null,
+    val questions: List<Question> = emptyList(),
+    val answers: Map<Int, String> = emptyMap(),
+    val result: ResultResponse? = null,
+    val error: String? = null
+)
 
 @HiltViewModel
-class CognitiveViewModel @Inject constructor(private val repository: CognitiveRepository) : ViewModel() {
+class CognitiveViewModel @Inject constructor(
+    private val repo: CognitiveRepository
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<CognitiveUiState>(CognitiveUiState.Loading)
-    val uiState: StateFlow<CognitiveUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(CognitiveUiState())
+    val uiState: StateFlow<CognitiveUiState> = _uiState
 
-    private var questions: CognitiveQuestionResponse = CognitiveQuestionResponse(sessionId = 0, questionList = emptyList()) // 문제 저장
+    init {
+        // 화면 진입 시 자동으로 10문항 로드
+        startTest(userId = 2, count = 10)
+    }
 
-
-    /**
-     * to /cognitive/start
-     */
-    fun loadQuestions() {
-        // TODO repository 에서 호출해서 데이터 가져오기
+    fun startTest(userId: Int = 1, count: Int = 10, category: String? = null) {
+        _uiState.value = _uiState.value.copy(loading = true, error = null, result = null)
         viewModelScope.launch {
-            _uiState.value = CognitiveUiState.Loading
+            try {
+                val res = repo.startTest(userId, count, category)
+                _uiState.value = _uiState.value.copy(
+                    loading = false,
+                    sessionId = res.sessionId,
+                    questions = res.questions,
+                    answers = emptyMap(),
 
-            questions = repository.getCognitiveTestQuestions()
-
-            _uiState.value = if (questions.sessionId == -1 || questions.sessionId == 0) {
-                CognitiveUiState.Ready(questions)
-            } else CognitiveUiState.Error("문제 불러오기 실패")
+                    )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    loading = false, error = "시작 실패: ${e.message}"
+                )
+            }
         }
-    }// end loadQuestions
+    }
 
-    /**
-     * viewModel 이 가지고 있는 questions에 user_answer 변경하는 로직
-     */
-    fun updateAnswer(questionId: Int, answer: String) {
-        // TODO 사용자 질문들 넣기
-    }// end updateAnswer
+    fun updateAnswer(questionNo: Int, text: String) {
+        val newMap = _uiState.value.answers.toMutableMap()
+        newMap[questionNo] = text
+        _uiState.value = _uiState.value.copy(answers = newMap)
+    }
 
-    /**
-     * to /cognitive/result
-     */
-    fun submitAnswers() {
-        // TODO 결과값 가져오기  (사용자 답변을 가져오는 방법)
+    fun submit() {
+        val state = _uiState.value
+        val sid = state.sessionId ?: return
+        val payload = state.questions.map { q ->
+            AnswerItem(
+                questionNo = q.questionNo,
+                questionId = q.questionId,
+                sttText = null,                    // STT 결과는 여기로
+                typedText = state.answers[q.questionNo] ?: "",
+                latencyMs = null
+            )
+        }
+
+        _uiState.value = state.copy(loading = true, error = null)
         viewModelScope.launch {
-            _uiState.value = CognitiveUiState.Waiting
-            val answersList = questions
-            val result = repository.submitCognitiveAnswers(answersList)
-            _uiState.value = CognitiveUiState.Result(result)
+            try {
+                val res = repo.submitAnswers(sid, payload)
+                _uiState.value = _uiState.value.copy(loading = false, result = res)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    loading = false, error = "제출 실패: ${e.message}"
+                )
+            }
         }
-    }// end submitAnswers
+    }
 
-}// end CognitiveViewModel
+    fun reset() {
+        _uiState.value = CognitiveUiState()
+    }
+}

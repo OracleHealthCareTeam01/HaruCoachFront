@@ -53,7 +53,7 @@ fun HaruApp() {
                 currentRoute = currentRoute,
                 onSelect = { route ->
                     nav.navigate(route) {
-                        popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                        popUpTo(nav.graph.findStartDestination().id) { saveState = false }
                         launchSingleTop = true
                         restoreState = true
                     }
