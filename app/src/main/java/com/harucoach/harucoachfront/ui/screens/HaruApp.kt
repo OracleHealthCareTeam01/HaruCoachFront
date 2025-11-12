@@ -14,11 +14,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveIntroScreen
+import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveTestScreen
+import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveWaitingScreen
 
 object Routes {
     const val HOME = "home"
     const val COGNITIVE = "cognitive"
     const val COGNITIVE_TEST = "cognitive_test"
+    const val COGNITIVE_WAITING = "cognitive_waiting"
     const val DIARY = "diary"
     const val LEARN = "learn"
     const val MY = "my"
@@ -35,6 +39,7 @@ fun HaruApp() {
         Routes.HOME -> "홈"
         Routes.COGNITIVE -> "인지 능력 검사"
         Routes.COGNITIVE_TEST -> "인지 능력 검사"
+        Routes.COGNITIVE_WAITING -> "검사 결과 대기"
         Routes.DIARY -> "오늘의 일기"
         Routes.LEARN -> "오늘의 학습"
         Routes.MY -> "내 정보"
@@ -67,6 +72,8 @@ fun HaruApp() {
             composable(Routes.COGNITIVE) { CognitiveIntroScreen(onStart = { nav.navigate(Routes.COGNITIVE_TEST) }) }
             //인지능력 검사 화면
             composable(Routes.COGNITIVE_TEST) { CognitiveTestScreen(nav) }
+            // 인지능력 검사
+            composable(Routes.COGNITIVE_WAITING) { CognitiveWaitingScreen() }
             //오늘의 일기 
             composable(Routes.DIARY) {
                 //SimplePage("오늘의 일기")

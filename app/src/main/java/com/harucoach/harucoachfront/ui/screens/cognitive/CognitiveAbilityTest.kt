@@ -1,4 +1,4 @@
-package com.harucoach.harucoachfront.ui.screens
+package com.harucoach.harucoachfront.ui.screens.cognitive
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -42,8 +42,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
 import com.harucoach.harucoachfront.viewmodel.VoiceRecognitionViewModel
 import kotlinx.coroutines.delay
 import java.util.Locale
@@ -51,6 +53,7 @@ import java.util.Locale
 @Composable
 fun CognitiveTestScreen(
     navController: NavHostController,
+    cogViewModel: CognitiveViewModel = hiltViewModel(),
     viewModel: VoiceRecognitionViewModel = viewModel()
 ) {
     var recordedText by viewModel.recordedText //음성 인식된 값
@@ -64,6 +67,7 @@ fun CognitiveTestScreen(
     var showDialog2 by remember { mutableStateOf(true) }//화면 시작 다이얼로그
     
     //다음 버튼 클릭 이벤트
+    // TODO cogViewModel.submitAnswers
     val onNextClicked = {
         if (numBer < 10) {
             numBer++
@@ -72,7 +76,7 @@ fun CognitiveTestScreen(
             viewModel.recordedText.value = ""
             viewModel.speak("올해가 몇년도 인가요?")
         } else {
-            navController.navigate("home") {
+            navController.navigate("cognitive_waiting") {
                 popUpTo("cognitiveTest") { inclusive = true }
             }
         }
@@ -220,6 +224,7 @@ fun CognitiveTestScreen(
                     )
                 }
 
+                // TODO cogViewModel.updateAnswer()
                 Button(
                     onClick = { onNextClicked() },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
