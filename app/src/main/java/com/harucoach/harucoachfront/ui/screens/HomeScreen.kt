@@ -1,6 +1,7 @@
 package com.harucoach.harucoachfront.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,9 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.harucoach.harucoachfront.R
 import com.harucoach.harucoachfront.ui.theme.HaruGreen
 import com.harucoach.harucoachfront.ui.theme.HaruGreenLight
 
@@ -80,7 +83,12 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                         .background(HaruGreenLight),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("🙂", fontSize = 28.sp)
+                    1
+                    Image(
+                        painter = painterResource(id = R.drawable.normal_feelings),
+                        contentDescription = "평벙함",
+                        modifier = Modifier.size(48.dp) // 이미지 크기 조절
+                    )
                 }
             }
         }

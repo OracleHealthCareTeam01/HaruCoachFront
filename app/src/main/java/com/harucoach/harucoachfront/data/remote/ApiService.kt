@@ -1,16 +1,29 @@
 package com.harucoach.harucoachfront.data.remote
 
+import com.harucoach.harucoachfront.data.models.*
+import retrofit2.http.*
 
+interface ApiService {
 
-import com.harucoach.harucoachfront.data.models.LoginRequest
-import com.harucoach.harucoachfront.data.models.LoginResponse
-import retrofit2.http.Body
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.POST
-
-interface ApiService  {
-    @POST("/auth/login")  // FastAPI /login 엔드포인트
+    //폼 방식
     @FormUrlEncoded
-    suspend fun login(@Field("username") username: String, @Field("password") password: String): LoginResponse
+    @POST("auth/login")
+    suspend fun login(
+        @Field("username") username: String,
+        @Field("password") password: String
+    ): LoginResponse
+
+    // 세션 생성 + 문항 조회
+    @GET("cognitive/start")
+    suspend fun getCognitiveQuestions(
+        @Query("user_id") userId: Int = 1, // 로그인 연동 전 임시
+        @Query("count") count: Int = 10,
+        @Query("category") category: String? = null
+    ): StartResponse
+
+    // 답안 제출 + 결과
+    @POST("cognitive/submit")
+    suspend fun submitCognitiveAnswers(
+        @Body body: SubmitRequest
+    ): ResultResponse
 }
