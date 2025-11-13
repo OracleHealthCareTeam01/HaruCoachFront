@@ -26,7 +26,7 @@ data class CognitiveUiState(
 class CognitiveViewModel @Inject constructor(
     private val repo: CognitiveRepository
 ) : ViewModel() {
-
+    
     private val _uiState = MutableStateFlow(CognitiveUiState())
     val uiState: StateFlow<CognitiveUiState> = _uiState
 
