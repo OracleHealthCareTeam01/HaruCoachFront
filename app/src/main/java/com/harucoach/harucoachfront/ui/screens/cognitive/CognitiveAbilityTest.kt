@@ -45,9 +45,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.google.gson.Gson
+import com.harucoach.harucoachfront.data.models.AnswerItem
 import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
 import com.harucoach.harucoachfront.viewmodel.VoiceRecognitionViewModel
 import kotlinx.coroutines.delay
@@ -76,26 +78,32 @@ fun CognitiveTestScreen(
 
     val loginResult by cogViewModel.uiState.collectAsState()
     val sessionId = loginResult.sessionId
-    val questions = loginResult.questions
+    val questions  = loginResult.questions
 
     var showDialog by remember { mutableStateOf(false) }//검사 그만하기 다이얼로그
     var showDialog2 by remember { mutableStateOf(true) }//화면 시작 다이얼로그
 
-
-
+    val sttList: MutableList<String> = MutableList(10) { "" };
+    val latencyMs: MutableList<Int> = MutableList(10){0};
     //다음 버튼 클릭 이벤트
     // TODO cogViewModel.submitAnswers
     val onNextClicked = {
         if (numBer < 10) {
+
+            sttList[numBer] = recordedText;
+            latencyMs[numBer] = remainingTime.intValue;
             numBer++
             remainingTime.intValue = 30
             viewModel.btnState.value = 1
             viewModel.recordedText.value = ""
+
             val q = questions[numBer-1]
             viewModel.speak(" ${q.text}")
             test = " ${q.text}"
 
         } else {
+
+            cogViewModel.submit(sttList,latencyMs) // 여기에서 submit() 함수 호출
             navController.navigate("cognitive_waiting") {
                 popUpTo("cognitiveTest") { inclusive = true }
             }
