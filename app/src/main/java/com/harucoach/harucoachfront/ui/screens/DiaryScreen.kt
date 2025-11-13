@@ -38,10 +38,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -250,6 +252,7 @@ fun DiaryScreen(
     val moodMap by viewModel.moodMap.collectAsState()
     // end moodMap
 
+    var showFeedbackSheet by remember { mutableStateOf(false) }
 
     // end when uiState
     val scrollState = rememberScrollState()
@@ -257,13 +260,14 @@ fun DiaryScreen(
     val isAtBottom by remember {
         derivedStateOf {
             // 최대 스크롤 값과 현재 스크롤 값이 같으면 최하단 도달
-            scrollState.value >= scrollState.maxValue
+            //scrollState.value >= scrollState.maxValue
+            derivedStateOf { scrollState.value >= scrollState.maxValue }
         }
     }
-    LaunchedEffect(isAtBottom) {
-        if (isAtBottom) {
-            // 최하단 도달 시 추가 데이터 로드 등 필요한 작업 수행
-            Log.d("최하단에 도달했습니다!","여기에 화면 전환 시작")
+    // derivedStateOf는 State<Boolean>을 반환하므로 .value를 써야 함
+    LaunchedEffect(isAtBottom.value) {
+        if (isAtBottom.value) {
+            showFeedbackSheet = true
         }
     }
     /* -------------------- 화면 본문: 세로로 쭉 쌓이는 레이아웃 -------------------- */
@@ -545,6 +549,18 @@ fun DiaryScreen(
             }
         }
     } // end Column (전체 화면)
+
+    /*if (showFeedbackSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showFeedbackSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        ) {
+            AiFeedbackScreenContent(
+                onClose = { showFeedbackSheet = false }
+            )
+        }
+    }*/
+
 } // end DiaryScreen
 
 

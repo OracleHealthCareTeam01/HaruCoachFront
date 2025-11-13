@@ -1,8 +1,10 @@
 package com.harucoach.harucoachfront.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel  // ViewModel은 앱의 뇌처럼, 화면이 바뀌어도 기억을 지켜줘요.
 import androidx.lifecycle.viewModelScope  // 이건 안전한 방에서 일을 하게 해줘요, 앱이 안 깨지게.
 import com.harucoach.harucoachfront.data.models.DiaryEntry  // 일기 조각(날짜, 기분, 텍스트)을 가져오는 친구예요.
+import com.harucoach.harucoachfront.data.models.DiaryResponse
 import com.harucoach.harucoachfront.data.repository.DiaryRepository  // 데이터 창고(저장소)를 연결해줘요, 백엔드나 메모리에서 일기를 가져와요.
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -77,6 +79,9 @@ class DiaryViewModel @Inject constructor(
             _uiState.value = DiaryUiState.Loading // 로딩중 상태 표시
             try {
                 // DiaryRepository 에서 값 가져옴
+
+
+
                 val fetched = repository.fetchAllDiaries()
                 memoryStore.clear()
                 memoryStore.putAll(fetched) // 메모리 저장소에 채움
@@ -121,9 +126,10 @@ class DiaryViewModel @Inject constructor(
      *  TODO update 따로 구현
      */
     fun saveDiary() {
+
         val date = _selectedDate.value
         val key = date.format(dateFormatter)
-        val entry = DiaryEntry(date = date, mood = _currentMood.value, text = _currentText.value)
+        val entry = DiaryEntry(entry_date = date.toString(), mood_code = _currentMood.value, content = _currentText.value)
 
         viewModelScope.launch {
             _uiState.value = DiaryUiState.Saving // 저장 중 상태
@@ -136,7 +142,8 @@ class DiaryViewModel @Inject constructor(
                     repository.updateDiary(entry)
                 } else {
                     // 없으면 새로 저장
-                    repository.saveDiary(entry)
+                    //repository.saveDiary(entry)
+                    repository.startDiaryTest(entry)
                 }
 
                 // 메모리에도 반영해서 즉시 UI에 갱신되도록 함
@@ -174,8 +181,8 @@ class DiaryViewModel @Inject constructor(
                 val entry = memoryStore[key]
                 if (entry != null) {
                     // 있으면 UI 상태를 해당 값으로 채움
-                    _currentMood.value = entry.mood
-                    _currentText.value = entry.text
+                    _currentMood.value = entry.mood_code
+                    _currentText.value = entry.content
                 } else {
                     // 없으면 기본값으로 초기화
                     _currentMood.value = "보통"
@@ -202,7 +209,7 @@ class DiaryViewModel @Inject constructor(
     private fun refreshMoodMap() {
         // memoryStore의 키는 "yyyy-MM-dd" 문자열임을 가정
         val map = memoryStore.mapKeys { LocalDate.parse(it.key, dateFormatter) }
-            .mapValues { it.value.mood }
+            .mapValues { it.value.mood_code }
         _moodMap.value = map
     }
 
