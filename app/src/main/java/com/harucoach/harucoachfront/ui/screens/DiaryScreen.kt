@@ -220,7 +220,7 @@ fun DiaryScreen(
     val text by viewModel.currentText.collectAsState()           // 일기 텍스트 내용
     val mood by viewModel.currentMood.collectAsState()           // 현재 선택된 감정(이모지)
     // end state reads
-    recordedText = text;
+
 
     // 코루틴 스코프를 가져옵니다. 버튼을 누르면 이 안에서 애니메이션 같은 작업을 할 거예요.
     val coroutineScope = rememberCoroutineScope() // 버튼 클릭 등에서 비동기 작업을 안전하게 실행합니다.
@@ -251,13 +251,14 @@ fun DiaryScreen(
     // moodMap의 키는 LocalDate, 값은 그 날짜의 이모지예요.
     val moodMap by viewModel.moodMap.collectAsState()
     // end moodMap
-
-    var showFeedbackSheet by remember { mutableStateOf(false) }
+    recordedText = text;
+    viewModel.selectDate(selectedDate)
+   /* var showFeedbackSheet by remember { mutableStateOf(false) }*/
 
     // end when uiState
     val scrollState = rememberScrollState()
 
-    val isAtBottom by remember {
+    /*val isAtBottom by remember {
         derivedStateOf {
             // 최대 스크롤 값과 현재 스크롤 값이 같으면 최하단 도달
             //scrollState.value >= scrollState.maxValue
@@ -269,7 +270,7 @@ fun DiaryScreen(
         if (isAtBottom.value) {
             showFeedbackSheet = true
         }
-    }
+    }*/
     /* -------------------- 화면 본문: 세로로 쭉 쌓이는 레이아웃 -------------------- */
     Column(
         modifier = Modifier
