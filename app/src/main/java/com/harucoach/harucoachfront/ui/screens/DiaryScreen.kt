@@ -64,11 +64,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.harucoach.harucoachfront.R
 import com.harucoach.harucoachfront.ui.componenets.CalendarMonthView
 import com.harucoach.harucoachfront.ui.componenets.MoodSelectDialog
+import com.harucoach.harucoachfront.ui.screens.cognitive.CustomFullAlertDialog
 import com.harucoach.harucoachfront.viewmodel.DiaryUiState
 import com.harucoach.harucoachfront.viewmodel.DiaryViewModel
 import kotlinx.coroutines.launch
@@ -94,11 +96,14 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class) // 실험적 API를 사용할 때 붙이는 표시입니다.
 @Composable
 fun DiaryScreen(
+    navController: NavHostController,
     viewModel: DiaryViewModel = hiltViewModel(), // 데이터와 동작을 관리하는 친구(뷰모델)를 받아옵니다.
     onCancel: () -> Unit = {}, // 취소 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
-    onSave: () -> Unit = {} // 저장 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
+    onSave: () -> Unit = {
+    } // 저장 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
 
 ) {
+    var showDialog by remember { mutableStateOf(false) }//저장하기 다이얼로그
 
     // 현재 Compose 컨텍스트에서 Context 객체를 가져옴
     val context = LocalContext.current    // 뒤로가기 버튼 비활성화
@@ -441,6 +446,7 @@ fun DiaryScreen(
                         viewModel.updateMood(m)
                         showMoodDialog = false
                     }
+
                 )
             }
         } // end Row date+mood
@@ -513,7 +519,7 @@ fun DiaryScreen(
                     Log.d("recordedText 테스트", recordedText)
                     viewModel.saveDiary() // 저장 로직을 실행 (ViewModel에서 처리)
                     onSave() // 외부 콜백(예: 화면 닫기) 실행
-
+                    showDialog = true
 
                 },
                 modifier = Modifier.weight(1f),
@@ -550,7 +556,14 @@ fun DiaryScreen(
             }
         }
     } // end Column (전체 화면)
-
+    //앱 실행시 나오는 다이얼 로그
+    if (showDialog) {
+        InfiniteAnimation(
+            onDismissRequest = {
+                showDialog = false
+            }
+        )
+    }
     /*if (showFeedbackSheet) {
         ModalBottomSheet(
             onDismissRequest = { showFeedbackSheet = false },
@@ -564,9 +577,9 @@ fun DiaryScreen(
 
 } // end DiaryScreen
 
-
+/*
 @Preview
 @Composable
 fun calendar_preview() {
     DiaryScreen()
-}
+}*/
