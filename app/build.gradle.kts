@@ -85,6 +85,12 @@ dependencies {
     implementation("com.google.accompanist:accompanist-pager:0.34.0")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.34.0")
 
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.coil-kt:coil-gif:2.6.0")
+
+    //    헬스커넥트 API
+    implementation("androidx.health.connect:connect-client:1.1.0-beta01")
+
 }
 
 // kapt { ... } 블록이 없다면 파일 하단에 추가

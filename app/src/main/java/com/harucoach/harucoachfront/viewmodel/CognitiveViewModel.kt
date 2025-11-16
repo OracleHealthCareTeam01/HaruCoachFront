@@ -26,7 +26,7 @@ data class CognitiveUiState(
 class CognitiveViewModel @Inject constructor(
     private val repo: CognitiveRepository
 ) : ViewModel() {
-
+    
     private val _uiState = MutableStateFlow(CognitiveUiState())
     val uiState: StateFlow<CognitiveUiState> = _uiState
 
@@ -34,6 +34,7 @@ class CognitiveViewModel @Inject constructor(
         // 화면 진입 시 자동으로 10문항 로드
         startTest(userId = 2, count = 10)
     }
+
 
     fun startTest(userId: Int = 1, count: Int = 10, category: String? = null) {
         _uiState.value = _uiState.value.copy(loading = true, error = null, result = null)
@@ -61,18 +62,19 @@ class CognitiveViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(answers = newMap)
     }
 
-    fun submit() {
+    fun submit(sttList: List<String>, latencyMs: List<Int>) {
         val state = _uiState.value
         val sid = state.sessionId ?: return
         val payload = state.questions.map { q ->
             AnswerItem(
                 questionNo = q.questionNo,
                 questionId = q.questionId,
-                sttText = null,                    // STT 결과는 여기로
+                sttText = sttList[q.questionNo - 1],                    // STT 결과는 여기로
                 typedText = state.answers[q.questionNo] ?: "",
-                latencyMs = null
+                latencyMs = latencyMs[q.questionNo - 1]
             )
         }
+        Log.d("테스트",payload.toString())
 
         _uiState.value = state.copy(loading = true, error = null)
         viewModelScope.launch {

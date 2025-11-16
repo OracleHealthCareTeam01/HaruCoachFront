@@ -46,7 +46,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +61,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.harucoach.harucoachfront.R
@@ -92,11 +93,14 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class) // 실험적 API를 사용할 때 붙이는 표시입니다.
 @Composable
 fun DiaryScreen(
+    navController: NavHostController, // NavHostController 인자 추가
     viewModel: DiaryViewModel = hiltViewModel(), // 데이터와 동작을 관리하는 친구(뷰모델)를 받아옵니다.
     onCancel: () -> Unit = {}, // 취소 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
-    onSave: () -> Unit = {} // 저장 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
+    onSave: () -> Unit = {
+    } // 저장 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
 
 ) {
+    var showDialog by remember { mutableStateOf(false) }//저장하기 다이얼로그
 
     // 현재 Compose 컨텍스트에서 Context 객체를 가져옴
     val context = LocalContext.current    // 뒤로가기 버튼 비활성화
@@ -218,7 +222,7 @@ fun DiaryScreen(
     val text by viewModel.currentText.collectAsState()           // 일기 텍스트 내용
     val mood by viewModel.currentMood.collectAsState()           // 현재 선택된 감정(이모지)
     // end state reads
-    recordedText = text;
+
 
     // 코루틴 스코프를 가져옵니다. 버튼을 누르면 이 안에서 애니메이션 같은 작업을 할 거예요.
     val coroutineScope = rememberCoroutineScope() // 버튼 클릭 등에서 비동기 작업을 안전하게 실행합니다.
@@ -240,7 +244,7 @@ fun DiaryScreen(
 
     // 페이저의 현재 페이지가 바뀌면(사용자가 스와이프하면) 이 블록이 실행됩니다.
     LaunchedEffect(pagerState.currentPage) {
-        // 현재 보고 있는 달을 계산합니다.
+        // 현재 보고 있는 달을 계산합니다. 
         val ym = range.getOrNull(pagerState.currentPage) ?: centerYearMonth
         // 여기서 'ym'을 이용해 서버에서 그 달의 데이터를 가져오도록 연결할 수 있어요.
     } // end LaunchedEffect(pagerState.currentPage)
@@ -249,23 +253,26 @@ fun DiaryScreen(
     // moodMap의 키는 LocalDate, 값은 그 날짜의 이모지예요.
     val moodMap by viewModel.moodMap.collectAsState()
     // end moodMap
-
+    recordedText = text;
+    viewModel.selectDate(selectedDate)
+   /* var showFeedbackSheet by remember { mutableStateOf(false) }*/
 
     // end when uiState
     val scrollState = rememberScrollState()
 
-    val isAtBottom by remember {
+    /*val isAtBottom by remember {
         derivedStateOf {
             // 최대 스크롤 값과 현재 스크롤 값이 같으면 최하단 도달
-            scrollState.value >= scrollState.maxValue
+            //scrollState.value >= scrollState.maxValue
+            derivedStateOf { scrollState.value >= scrollState.maxValue }
         }
     }
-    LaunchedEffect(isAtBottom) {
-        if (isAtBottom) {
-            // 최하단 도달 시 추가 데이터 로드 등 필요한 작업 수행
-            Log.d("최하단에 도달했습니다!","여기에 화면 전환 시작")
+    // derivedStateOf는 State<Boolean>을 반환하므로 .value를 써야 함
+    LaunchedEffect(isAtBottom.value) {
+        if (isAtBottom.value) {
+            showFeedbackSheet = true
         }
-    }
+    }*/
     /* -------------------- 화면 본문: 세로로 쭉 쌓이는 레이아웃 -------------------- */
     Column(
         modifier = Modifier
@@ -436,6 +443,7 @@ fun DiaryScreen(
                         viewModel.updateMood(m)
                         showMoodDialog = false
                     }
+
                 )
             }
         } // end Row date+mood
@@ -508,7 +516,7 @@ fun DiaryScreen(
                     Log.d("recordedText 테스트", recordedText)
                     viewModel.saveDiary() // 저장 로직을 실행 (ViewModel에서 처리)
                     onSave() // 외부 콜백(예: 화면 닫기) 실행
-
+                    showDialog = true
 
                 },
                 modifier = Modifier.weight(1f),
@@ -530,6 +538,9 @@ fun DiaryScreen(
             DiaryUiState.Saved -> {
                 // 저장이 끝났을 때: "저장되었습니다" 메시지를 보여줍니다.
                 Text("저장되었습니다", color = MaterialTheme.colorScheme.primary)
+                showDialog = false
+                navController.navigate("day_summary") { // DaySummary 화면으로 이동
+                }
             }
 
             is DiaryUiState.Error -> {
@@ -538,18 +549,42 @@ fun DiaryScreen(
                     "오류: ${(uiState as DiaryUiState.Error).message}",
                     color = MaterialTheme.colorScheme.error
                 )
+                showDialog = false
+                navController.navigate("day_summary") { // DaySummary 화면으로 이동
+                }
             }
 
             else -> {
                 // 그 밖의 상태(Idle 등)은 아무 것도 안 함
             }
         }
+
     } // end Column (전체 화면)
+    //앱 실행시 나오는 다이얼 로그
+    if (showDialog) {
+        InfiniteAnimation(
+            navController = navController, // navController 전달
+            onDismissRequest = {
+                showDialog = false
+            }
+        )
+    }
+    /*if (showFeedbackSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showFeedbackSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        ) {
+            AiFeedbackScreenContent(
+                onClose = { showFeedbackSheet = false }
+            )
+        }
+    }*/
+
 } // end DiaryScreen
 
 
 @Preview
 @Composable
 fun calendar_preview() {
-    DiaryScreen()
+    DiaryScreen(navController = rememberNavController())
 }
