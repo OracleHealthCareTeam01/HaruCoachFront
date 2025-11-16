@@ -26,6 +26,8 @@ object Routes {
     const val DIARY = "diary"
     const val LEARN = "learn"
     const val MY = "my"
+
+    const val DAY_SUMMARY = "day_summary"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,6 +45,7 @@ fun HaruApp() {
         Routes.DIARY -> "오늘의 일기"
         Routes.LEARN -> "오늘의 학습"
         Routes.MY -> "내 정보"
+        Routes.DAY_SUMMARY -> "하루요약"
         else -> ""
     }
 
@@ -77,14 +80,19 @@ fun HaruApp() {
             //오늘의 일기 
             composable(Routes.DIARY) {
                 //SimplePage("오늘의 일기")
-                DiaryScreen(onCancel = { nav.popBackStack() })
+                DiaryScreen(nav,onCancel = { nav.popBackStack() })
             }
             //오늘의 학습
             composable(Routes.LEARN) {
                 //SimplePage("오늘의 학습")
             }
+            //마이페이지
             composable(Routes.MY) {
                 ProfileScreen()
+            }
+            //하루요약
+            composable(Routes.DAY_SUMMARY) {
+                DaySummary(nav)
             }
         }
     }

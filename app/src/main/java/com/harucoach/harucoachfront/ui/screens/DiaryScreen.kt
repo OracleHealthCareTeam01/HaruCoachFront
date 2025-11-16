@@ -38,17 +38,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,12 +62,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.harucoach.harucoachfront.R
 import com.harucoach.harucoachfront.ui.componenets.CalendarMonthView
 import com.harucoach.harucoachfront.ui.componenets.MoodSelectDialog
-import com.harucoach.harucoachfront.ui.screens.cognitive.CustomFullAlertDialog
 import com.harucoach.harucoachfront.viewmodel.DiaryUiState
 import com.harucoach.harucoachfront.viewmodel.DiaryViewModel
 import kotlinx.coroutines.launch
@@ -96,7 +93,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class) // 실험적 API를 사용할 때 붙이는 표시입니다.
 @Composable
 fun DiaryScreen(
-    navController: NavHostController,
+    navController: NavHostController, // NavHostController 인자 추가
     viewModel: DiaryViewModel = hiltViewModel(), // 데이터와 동작을 관리하는 친구(뷰모델)를 받아옵니다.
     onCancel: () -> Unit = {}, // 취소 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
     onSave: () -> Unit = {
@@ -247,7 +244,7 @@ fun DiaryScreen(
 
     // 페이저의 현재 페이지가 바뀌면(사용자가 스와이프하면) 이 블록이 실행됩니다.
     LaunchedEffect(pagerState.currentPage) {
-        // 현재 보고 있는 달을 계산합니다.
+        // 현재 보고 있는 달을 계산합니다. 
         val ym = range.getOrNull(pagerState.currentPage) ?: centerYearMonth
         // 여기서 'ym'을 이용해 서버에서 그 달의 데이터를 가져오도록 연결할 수 있어요.
     } // end LaunchedEffect(pagerState.currentPage)
@@ -541,6 +538,9 @@ fun DiaryScreen(
             DiaryUiState.Saved -> {
                 // 저장이 끝났을 때: "저장되었습니다" 메시지를 보여줍니다.
                 Text("저장되었습니다", color = MaterialTheme.colorScheme.primary)
+                showDialog = false
+                navController.navigate("day_summary") { // DaySummary 화면으로 이동
+                }
             }
 
             is DiaryUiState.Error -> {
@@ -549,16 +549,21 @@ fun DiaryScreen(
                     "오류: ${(uiState as DiaryUiState.Error).message}",
                     color = MaterialTheme.colorScheme.error
                 )
+                showDialog = false
+                navController.navigate("day_summary") { // DaySummary 화면으로 이동
+                }
             }
 
             else -> {
                 // 그 밖의 상태(Idle 등)은 아무 것도 안 함
             }
         }
+
     } // end Column (전체 화면)
     //앱 실행시 나오는 다이얼 로그
     if (showDialog) {
         InfiniteAnimation(
+            navController = navController, // navController 전달
             onDismissRequest = {
                 showDialog = false
             }
@@ -577,9 +582,9 @@ fun DiaryScreen(
 
 } // end DiaryScreen
 
-/*
+
 @Preview
 @Composable
 fun calendar_preview() {
-    DiaryScreen()
-}*/
+    DiaryScreen(navController = rememberNavController())
+}

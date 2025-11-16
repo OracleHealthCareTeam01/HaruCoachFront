@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -7,8 +8,17 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -16,13 +26,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import coil.ImageLoader // ImageLoader를 import 합니다.
-import coil.compose.AsyncImage // AsyncImage를 import 합니다.
-import coil.decode.ImageDecoderDecoder // GIF 디코더를 import 합니다.
-
+import androidx.navigation.NavController
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.decode.ImageDecoderDecoder
 import com.harucoach.harucoachfront.R
 
 /**
@@ -31,64 +42,68 @@ import com.harucoach.harucoachfront.R
 
 @Composable
 fun InfiniteAnimation(
+    navController: NavController, // NavController 인자 추가
     onDismissRequest: () -> Unit,
 ) {
     Dialog(
-        onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false) // 화면 꽉 채우기
+        onDismissRequest = {
+            onDismissRequest() // 기존 다이얼로그 닫기 로직 실행
+            navController.navigate("day_summary_route") { // DaySummary 화면으로 이동
+                popUpTo("ai_feedback_route") { inclusive = true } // 현재 AI 피드백 화면을 백 스택에서 제거
+            }
+        },
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false, // 화면 꽉 채우기
+            // `AiFeedback` 내부에 BackHandler가 있으므로 이곳의 `dismissOnBackPress`는 `true`로 두어 `onDismissRequest`가 트리거되도록 합니다.
+            // 하지만 사용자 요청으로 뒤로 가기를 막고 싶다면, `AiFeedback` 컴포저블 내부에서 `onDismissRequest`를 직접 호출하는 로직이 필요합니다.
+            // 여기서는 `Dialog` 자체의 뒤로 가기 및 외부 클릭 방지 속성을 유지하고, onDismissRequest는 `AiFeedback` 내부의 특정 액션(예: 타이머 종료 후 자동 닫힘)에 의해 호출된다고 가정합니다.
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        )
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),  // 좌우 꽉 채움
-            //color = Color(207, 208, 212)// <<-- 이렇게 수정!
             color = Color.Transparent
         ) {
-            AiFeedback(onDismissRequest)
+            // AiFeedback 컴포저블은 onDismissRequest만 받도록 유지
+            // 만약 AiFeedback 내부에서 ViewModel이 필요하다면 AiFeedback 자체에 인자를 추가하세요.
+            AiFeedback(onDismissRequest = onDismissRequest)
         }
-
     }
 }
 
 @Composable
-fun AiFeedback(onDismissRequest: () -> Unit) {
+fun AiFeedback(
+    onDismissRequest: () -> Unit,
+) {
+    // 뒤로가기 버튼 비활성화 (DialogProperties에서 이미 설정되었지만, 명시적으로 유지)
+    BackHandler(enabled = true) {
+        // 뒤로가기 버튼이 눌려도 아무 작업도 하지 않습니다.
+    }
 
-// 1. 'infiniteRepeatable' 애니메이션을 관리하는 '무한 전환(InfiniteTransition)' 객체를 생성하고 기억합니다.
-    // 이 객체는 하나 이상의 자식 애니메이션(예: animateFloat)을 무한히 반복시킬 수 있습니다.
-    val infiniteTransition = rememberInfiniteTransition(label = "HeartSizeAnimation") // label을 추가하면 디버깅 시 유용합니다.
+    val infiniteTransition = rememberInfiniteTransition(label = "HeartSizeAnimation")
 
-    // 2. 'infiniteTransition'을 사용하여 Float 타입의 값을 무한히 변화시키는 애니메이션을 정의합니다.
-    // 이 애니메이션은 아래 'animationSpec'에 따라 'initialValue'와 'targetValue' 사이를 계속 오갑니다.
     val heartSize by infiniteTransition.animateFloat(
-        // 애니메이션 시작 값 (처음 크기)
         initialValue = 250.0f,
-        // 애니메이션 목표 값 (최대로 커질 크기)
         targetValue = 300.0f,
-        // 3. 애니메이션의 동작 방식과 세부 설정을 정의합니다.
         animationSpec = infiniteRepeatable(
-            // 'tween'은 시작과 끝 값이 있는 기본적인 애니메이션을 만듭니다.
             animation = tween(
-                durationMillis = 800, // 한 사이클(100.0f -> 250.0f)이 진행되는 시간 (0.8초)
-                delayMillis = 100,    // 애니메이션이 시작되기 전의 딜레이 시간 (0.1초)
-                easing = FastOutLinearInEasing // 애니메이션 속도 곡선: 처음엔 빨랐다가 선형 속도로 변경됩니다.
+                durationMillis = 800,
+                delayMillis = 100,
+                easing = FastOutLinearInEasing
             ),
-            // 'repeatMode'는 애니메이션이 반복될 때의 방식을 결정합니다.
-            // 'RepeatMode.Reverse'는 정방향(100->250)으로 재생된 후, 역방향(250->100)으로 재생되어 부드럽게 커졌다 작아지는 효과를 줍니다.
-            // 'RepeatMode.Restart'는 정방향 재생 후 다시 처음부터 정방향으로 재생됩니다 (크기가 뿅하고 다시 작아짐).
             repeatMode = RepeatMode.Reverse
         ),
-        label = "쿠무tSizeValue" // 이 애니메이션 값에 대한 레이블
+        label = "쿠무tSizeValue"
     )
     Box(
-        // contentAlignment를 Center로 설정하면 Box 내부의 모든 자식들이 정중앙에 배치됩니다.
         contentAlignment = Alignment.Center,
-        // Box가 화면 전체를 차지하도록 하여, 중앙 정렬의 기준 영역을 화면 전체로 만듭니다.
         modifier = Modifier.fillMaxSize()
     ) {
-        // 1. 전체를 Column으로 감싸서 수직으로 배치합니다.
         Column(
-            modifier = Modifier.fillMaxWidth(), // 가로를 꽉 채워야 오른쪽 정렬이 의미가 있습니다.
-            horizontalAlignment = Alignment.CenterHorizontally // 자식들을 기본적으로 수평 중앙 정렬
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 첫 번째 요소: 말풍선 애니메이션 (기존 Row)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -105,27 +120,25 @@ fun AiFeedback(onDismissRequest: () -> Unit) {
                     Text(
                         text = "쿠무가 {닉네임}의\n하루를 요약중이에요\n",
                         style = MaterialTheme.typography.bodyLarge,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        textAlign = TextAlign.Center
                     )
                 }
             }
 
-            // 2. GIF 디코더를 포함하는 ImageLoader 생성
             val imageLoader = ImageLoader.Builder(LocalContext.current)
                 .components {
                     add(ImageDecoderDecoder.Factory())
                 }
                 .build()
 
-            // 3. 두 번째 요소: 쿠무 캐릭터 GIF (말풍선 아래, 오른쪽에 배치)
             AsyncImage(
                 model = R.drawable.kumu,
                 contentDescription = "쿠무 캐릭터 애니메이션",
                 imageLoader = imageLoader,
                 modifier = Modifier
-                    .size(120.dp) // 고정된 크기
-                    .align(Alignment.End) // <<-- Column 내에서 오른쪽 끝으로 정렬!
-                    .padding(end = 16.dp) // 화면 오른쪽 끝에서 약간의 여백 주기
+                    .size(120.dp)
+                    .align(Alignment.End)
+                    .padding(end = 16.dp)
             )
         }
     }
