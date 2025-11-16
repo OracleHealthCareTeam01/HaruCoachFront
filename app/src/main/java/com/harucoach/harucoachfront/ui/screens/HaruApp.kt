@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.screens
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -8,6 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -17,12 +21,15 @@ import androidx.navigation.compose.rememberNavController
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveIntroScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveTestScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveWaitingScreen
+import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveResultScreen
+import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
 
 object Routes {
     const val HOME = "home"
     const val COGNITIVE = "cognitive"
     const val COGNITIVE_TEST = "cognitive_test"
     const val COGNITIVE_WAITING = "cognitive_waiting"
+    const val COGNITIVE_RESULT = "cognitive_result"
     const val DIARY = "diary"
     const val LEARN = "learn"
     const val MY = "my"
@@ -35,13 +42,21 @@ object Routes {
 fun HaruApp() {
     val nav = rememberNavController()
     val currentRoute = nav.currentRoute()
-    
+
+    // Activity 범위의 ViewModel 생성 (한 번만!)
+    val activity = LocalContext.current as ComponentActivity
+    val sharedCognitiveViewModel: CognitiveViewModel = viewModel(
+        viewModelStoreOwner = activity
+    )
+
+
     //타이틀 명지정
     val topTitle = when (currentRoute) {
         Routes.HOME -> "홈"
         Routes.COGNITIVE -> "인지 능력 검사"
         Routes.COGNITIVE_TEST -> "인지 능력 검사"
         Routes.COGNITIVE_WAITING -> "검사 결과 대기"
+        Routes.COGNITIVE_RESULT -> "검사 결과"
         Routes.DIARY -> "오늘의 일기"
         Routes.LEARN -> "오늘의 학습"
         Routes.MY -> "내 정보"
@@ -72,11 +87,17 @@ fun HaruApp() {
             //하단 홈 버튼
             composable(Routes.HOME) { HomeScreen(onNavigate = { nav.navigate(it) }) }
             //홈화면 인지능력검사
-            composable(Routes.COGNITIVE) { CognitiveIntroScreen(onStart = { nav.navigate(Routes.COGNITIVE_TEST) }) }
+            composable(Routes.COGNITIVE) { CognitiveIntroScreen(
+                onStart = { nav.navigate(Routes.COGNITIVE_TEST) },
+                viewModel = sharedCognitiveViewModel  // 🔥 추가!
+            ) }
             //인지능력 검사 화면
-            composable(Routes.COGNITIVE_TEST) { CognitiveTestScreen(nav) }
+            composable(Routes.COGNITIVE_TEST) { CognitiveTestScreen(nav, sharedCognitiveViewModel) }
             // 인지능력 검사
-            composable(Routes.COGNITIVE_WAITING) { CognitiveWaitingScreen() }
+            composable(Routes.COGNITIVE_WAITING) { CognitiveWaitingScreen(navController = nav, sharedCognitiveViewModel) }
+            composable(Routes.COGNITIVE_RESULT) {
+                CognitiveResultScreen(navController = nav, sharedCognitiveViewModel)
+            }
             //오늘의 일기 
             composable(Routes.DIARY) {
                 //SimplePage("오늘의 일기")
