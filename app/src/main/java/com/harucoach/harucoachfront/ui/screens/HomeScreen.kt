@@ -208,7 +208,7 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                 title = "오늘의 학습",
                 icon = Icons.Default.Book,
                 modifier = Modifier.weight(1f),
-                onClick = { onNavigate(Routes.LEARN) }
+                onClick = { onNavigate(Routes.NUMBERS_GAME) }
             )
         }
     }

@@ -33,8 +33,8 @@ object Routes {
     const val DIARY = "diary"
     const val LEARN = "learn"
     const val MY = "my"
-
     const val DAY_SUMMARY = "day_summary"
+    const val NUMBERS_GAME = "numbers_game"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,6 +61,7 @@ fun HaruApp() {
         Routes.LEARN -> "오늘의 학습"
         Routes.MY -> "내 정보"
         Routes.DAY_SUMMARY -> "하루요약"
+        Routes.NUMBERS_GAME -> "숫자게임"
         else -> ""
     }
 
@@ -115,6 +116,10 @@ fun HaruApp() {
             composable(Routes.DAY_SUMMARY) {
                 DaySummary(nav)
             }
+            //숫자게임
+            composable(Routes.NUMBERS_GAME) {
+                NumbersGameScreen(nav)
+            }
         }
     }
 }
@@ -124,20 +129,22 @@ private fun HaruBottomBar(
     currentRoute: String?,
     onSelect: (String) -> Unit
 ) {
-    if (currentRoute != Routes.COGNITIVE_TEST){
-        NavigationBar {
-            NavigationBarItem(
-                selected = currentRoute in listOf(Routes.HOME, Routes.COGNITIVE, Routes.DIARY, Routes.LEARN),
-                onClick = { onSelect(Routes.HOME) },
-                icon = { Icon(Icons.Default.Home, contentDescription = "홈") },
-                label = { Text("홈") }
-            )
-            NavigationBarItem(
-                selected = currentRoute == Routes.MY,
-                onClick = { onSelect(Routes.MY) },
-                icon = { Icon(Icons.Default.Person, contentDescription = "마이") },
-                label = { Text("마이") }
-            )
+    if (currentRoute != Routes.COGNITIVE_TEST ){
+        if (currentRoute != Routes.COGNITIVE_WAITING ){
+            NavigationBar {
+                NavigationBarItem(
+                    selected = currentRoute in listOf(Routes.HOME, Routes.COGNITIVE, Routes.DIARY, Routes.LEARN),
+                    onClick = { onSelect(Routes.HOME) },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "홈") },
+                    label = { Text("홈") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Routes.MY,
+                    onClick = { onSelect(Routes.MY) },
+                    icon = { Icon(Icons.Default.Person, contentDescription = "마이") },
+                    label = { Text("마이") }
+                )
+            }
         }
     }
 }
