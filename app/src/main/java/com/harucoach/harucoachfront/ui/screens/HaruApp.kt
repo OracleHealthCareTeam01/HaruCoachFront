@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -22,7 +21,11 @@ import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveIntroScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveTestScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveWaitingScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveResultScreen
+import com.harucoach.harucoachfront.ui.screens.learn.LearnScreen
+import com.harucoach.harucoachfront.ui.screens.learn.games.MemoryGameScreen
+import com.harucoach.harucoachfront.ui.screens.learn.games.NumbersGameScreen
 import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
+import com.harucoach.harucoachfront.viewmodel.GameViewModel
 
 object Routes {
     const val HOME = "home"
@@ -34,7 +37,11 @@ object Routes {
     const val LEARN = "learn"
     const val MY = "my"
     const val DAY_SUMMARY = "day_summary"
+
     const val NUMBERS_GAME = "numbers_game"
+    const val MEMORY_GAME = "memory_game"      // 숫자 기억 게임
+    const val COLOR_GAME = "color_game"        // 색깔 맞추기 게임
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +53,10 @@ fun HaruApp() {
     // Activity 범위의 ViewModel 생성 (한 번만!)
     val activity = LocalContext.current as ComponentActivity
     val sharedCognitiveViewModel: CognitiveViewModel = viewModel(
+        viewModelStoreOwner = activity
+    )
+
+    val sharedGameViewModel: GameViewModel = viewModel(  // 🔥 GameViewModel 추가!
         viewModelStoreOwner = activity
     )
 
@@ -62,6 +73,8 @@ fun HaruApp() {
         Routes.MY -> "내 정보"
         Routes.DAY_SUMMARY -> "하루요약"
         Routes.NUMBERS_GAME -> "숫자게임"
+        Routes.MEMORY_GAME -> "숫자 기억하기"
+        Routes.COLOR_GAME -> "색깔 맞추기"
         else -> ""
     }
 
@@ -104,10 +117,29 @@ fun HaruApp() {
                 //SimplePage("오늘의 일기")
                 DiaryScreen(nav,onCancel = { nav.popBackStack() })
             }
+
+
+
+            // ************ 오늘의 학습 ==> 게임들 ****************//
             //오늘의 학습
             composable(Routes.LEARN) {
-                //SimplePage("오늘의 학습")
+                LearnScreen(navController = nav, gameViewModel = sharedGameViewModel)
             }
+            //숫자게임
+            composable(Routes.NUMBERS_GAME) {
+                NumbersGameScreen(nav, gameViewModel = sharedGameViewModel)
+            }
+
+            composable(Routes.MEMORY_GAME) {
+                MemoryGameScreen(navController = nav, gameViewModel = sharedGameViewModel)
+            }
+
+            composable(Routes.COLOR_GAME) {
+                // TODO: 다음 단계에서 만들 예정
+                Text("색깔 맞추기 게임 화면 (준비 중)")
+            }
+
+
             //마이페이지
             composable(Routes.MY) {
                 ProfileScreen()
@@ -116,10 +148,7 @@ fun HaruApp() {
             composable(Routes.DAY_SUMMARY) {
                 DaySummary(nav)
             }
-            //숫자게임
-            composable(Routes.NUMBERS_GAME) {
-                NumbersGameScreen(nav)
-            }
+
         }
     }
 }
