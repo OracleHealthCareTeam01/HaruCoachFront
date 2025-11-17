@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.screens.cognitive
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -38,6 +39,8 @@ fun CognitiveResultScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val result = uiState.result
+    BackHandler(enabled = true) {}//뒤로가기 막기
+
     Column(
         modifier = Modifier
             .fillMaxSize()

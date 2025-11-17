@@ -8,7 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton // 이 Repository는 앱 전체에서 하나의 인스턴스만 사용
-class AuthRepository @Inject constructor(
+class  AuthRepository @Inject constructor(
     private val apiService: ApiService,
     private val prefsManager: PreferencesManager
 ) {

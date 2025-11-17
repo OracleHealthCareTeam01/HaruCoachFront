@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.screens.cognitive
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -25,6 +26,10 @@ fun CognitiveWaitingScreen(
     navController: NavHostController,  // ← navController 파라미터 추가!
     viewModel: CognitiveViewModel
 ) {
+    BackHandler(enabled = true) {
+
+    }
+
     // ViewModel의 uiState를 관찰
     val uiState by viewModel.uiState.collectAsState()
 
