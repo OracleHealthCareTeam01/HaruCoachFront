@@ -123,7 +123,7 @@ fun CognitiveTestScreen(
         }
     }
 
-    BackHandler(enabled = true) {}
+    BackHandler(enabled = true) {}//뒤로가기 막기
 
     Column(
         modifier = Modifier

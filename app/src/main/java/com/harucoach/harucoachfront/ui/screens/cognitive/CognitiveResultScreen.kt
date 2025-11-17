@@ -1,6 +1,7 @@
 package com.harucoach.harucoachfront.ui.screens.cognitive
 
 import android.graphics.Point
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +24,8 @@ import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
 fun CognitiveResultScreen(
     viewModel: CognitiveViewModel = hiltViewModel()
 ) {
+    BackHandler(enabled = true) {}//뒤로가기 막기
+
     Column(
         modifier = Modifier
             .fillMaxSize()

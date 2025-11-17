@@ -75,6 +75,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.log
 
 /**
  * DiaryScreen: 한 줄씩 아주 쉬운 설명 주석이 달린 Compose 화면
@@ -254,7 +255,10 @@ fun DiaryScreen(
     val moodMap by viewModel.moodMap.collectAsState()
     // end moodMap
     recordedText = text;
-    viewModel.selectDate(selectedDate)
+
+    LaunchedEffect(Unit) {
+        viewModel.selectDate(selectedDate)
+    }
    /* var showFeedbackSheet by remember { mutableStateOf(false) }*/
 
     // end when uiState
@@ -404,7 +408,10 @@ fun DiaryScreen(
                 modifier = Modifier
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp)) // 모서리를 둥글게
                     .background(Color(0xFFF5F5F5)) // 연한 회색 배경
-                    .clickable { showMoodDialog = true } // 누르면 다이얼로그를 켬
+                    .clickable {
+                        viewModel.updateText(recordedText)
+                        showMoodDialog = true
+                    } // 누르면 다이얼로그를 켬
                     .padding(horizontal = 14.dp, vertical = 10.dp) // 내부 여백
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) { // Row로 감싸서 이미지와 텍스트를 나란히 배치

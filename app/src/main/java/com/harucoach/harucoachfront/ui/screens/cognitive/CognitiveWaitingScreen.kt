@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.screens.cognitive
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -39,6 +40,7 @@ fun CognitiveWaitingScreen(
 ) { // start CognitiveWaitingScreen
 
 //    TODO : LaunchedEffect(Unit) { viewModel.submitAnswers() } 제출 로직
+    BackHandler(enabled = true) {}//뒤로가기 막기
 
     // 전체 화면을 세로 중앙 정렬로 구성
     Column(
