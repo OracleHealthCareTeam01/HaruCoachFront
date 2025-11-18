@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.screens
 
+// Gson 임포트
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognitionListener
@@ -46,7 +47,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,14 +62,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import com.google.gson.Gson
 import com.harucoach.harucoachfront.R
 import com.harucoach.harucoachfront.ui.componenets.CalendarMonthView
 import com.harucoach.harucoachfront.ui.componenets.MoodSelectDialog
 import com.harucoach.harucoachfront.viewmodel.DiaryUiState
 import com.harucoach.harucoachfront.viewmodel.DiaryViewModel
 import kotlinx.coroutines.launch
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -92,11 +97,14 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class) // 실험적 API를 사용할 때 붙이는 표시입니다.
 @Composable
 fun DiaryScreen(
+    navController: NavHostController, // NavHostController 인자 추가
     viewModel: DiaryViewModel = hiltViewModel(), // 데이터와 동작을 관리하는 친구(뷰모델)를 받아옵니다.
     onCancel: () -> Unit = {}, // 취소 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
-    onSave: () -> Unit = {} // 저장 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
+    onSave: () -> Unit = {
+    } // 저장 버튼을 눌렀을 때 호출될 행동(외부에서 정해줄 수 있음)
 
 ) {
+    var showDialog by remember { mutableStateOf(false) }//저장하기 다이얼로그
 
     // 현재 Compose 컨텍스트에서 Context 객체를 가져옴
     val context = LocalContext.current    // 뒤로가기 버튼 비활성화
@@ -191,9 +199,9 @@ fun DiaryScreen(
             override fun onPartialResults(partialResults: Bundle?) {
                 // 인식된 부분 텍스트 목록을 가져옴
                 val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-               /* if (!matches.isNullOrEmpty()) {
-                    recordedText = matches[0] // 첫 번째 부분 인식 결과를 recordedText에 표시
-                }*/
+                /* if (!matches.isNullOrEmpty()) {
+                     recordedText = matches[0] // 첫 번째 부분 인식 결과를 recordedText에 표시
+                 }*/
             }
 
             // 기타 이벤트가 발생했을 때 호출됨
@@ -214,11 +222,14 @@ fun DiaryScreen(
     // UI가 보여줄 값들을 ViewModel에서 가져옵니다.
     // collectAsState()는 '실시간으로 값이 바뀌면 UI도 따라 바뀌게' 해주는 도구예요.
     val uiState by viewModel.uiState.collectAsState()            // 화면의 상태 (로딩, 저장중 등)
+    val uiStateAi by viewModel.uiStateAi.collectAsState()            // 화면의 상태 (로딩, 저장중 등)
+    val aiResult by viewModel.aiResult.collectAsState() // AI 분석 결과
+
     val selectedDate by viewModel.selectedDate.collectAsState()  // 사용자가 선택한 날짜
     val text by viewModel.currentText.collectAsState()           // 일기 텍스트 내용
     val mood by viewModel.currentMood.collectAsState()           // 현재 선택된 감정(이모지)
     // end state reads
-    recordedText = text;
+
 
     // 코루틴 스코프를 가져옵니다. 버튼을 누르면 이 안에서 애니메이션 같은 작업을 할 거예요.
     val coroutineScope = rememberCoroutineScope() // 버튼 클릭 등에서 비동기 작업을 안전하게 실행합니다.
@@ -249,23 +260,29 @@ fun DiaryScreen(
     // moodMap의 키는 LocalDate, 값은 그 날짜의 이모지예요.
     val moodMap by viewModel.moodMap.collectAsState()
     // end moodMap
+    recordedText = text;
 
+    LaunchedEffect(Unit) {
+        viewModel.selectDate(selectedDate)
+    }
+    /* var showFeedbackSheet by remember { mutableStateOf(false) }*/
 
     // end when uiState
     val scrollState = rememberScrollState()
 
-    val isAtBottom by remember {
+    /*val isAtBottom by remember {
         derivedStateOf {
             // 최대 스크롤 값과 현재 스크롤 값이 같으면 최하단 도달
-            scrollState.value >= scrollState.maxValue
+            //scrollState.value >= scrollState.maxValue
+            derivedStateOf { scrollState.value >= scrollState.maxValue }
         }
     }
-    LaunchedEffect(isAtBottom) {
-        if (isAtBottom) {
-            // 최하단 도달 시 추가 데이터 로드 등 필요한 작업 수행
-            Log.d("최하단에 도달했습니다!","여기에 화면 전환 시작")
+    // derivedStateOf는 State<Boolean>을 반환하므로 .value를 써야 함
+    LaunchedEffect(isAtBottom.value) {
+        if (isAtBottom.value) {
+            showFeedbackSheet = true
         }
-    }
+    }*/
     /* -------------------- 화면 본문: 세로로 쭉 쌓이는 레이아웃 -------------------- */
     Column(
         modifier = Modifier
@@ -397,7 +414,10 @@ fun DiaryScreen(
                 modifier = Modifier
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp)) // 모서리를 둥글게
                     .background(Color(0xFFF5F5F5)) // 연한 회색 배경
-                    .clickable { showMoodDialog = true } // 누르면 다이얼로그를 켬
+                    .clickable {
+                        viewModel.updateText(recordedText)
+                        showMoodDialog = true
+                    } // 누르면 다이얼로그를 켬
                     .padding(horizontal = 14.dp, vertical = 10.dp) // 내부 여백
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) { // Row로 감싸서 이미지와 텍스트를 나란히 배치
@@ -436,6 +456,7 @@ fun DiaryScreen(
                         viewModel.updateMood(m)
                         showMoodDialog = false
                     }
+
                 )
             }
         } // end Row date+mood
@@ -508,7 +529,7 @@ fun DiaryScreen(
                     Log.d("recordedText 테스트", recordedText)
                     viewModel.saveDiary() // 저장 로직을 실행 (ViewModel에서 처리)
                     onSave() // 외부 콜백(예: 화면 닫기) 실행
-
+                    showDialog = true
 
                 },
                 modifier = Modifier.weight(1f),
@@ -530,6 +551,7 @@ fun DiaryScreen(
             DiaryUiState.Saved -> {
                 // 저장이 끝났을 때: "저장되었습니다" 메시지를 보여줍니다.
                 Text("저장되었습니다", color = MaterialTheme.colorScheme.primary)
+                viewModel.DiaryAi()//AI호출
             }
 
             is DiaryUiState.Error -> {
@@ -538,6 +560,46 @@ fun DiaryScreen(
                     "오류: ${(uiState as DiaryUiState.Error).message}",
                     color = MaterialTheme.colorScheme.error
                 )
+                viewModel.DiaryAi()//AI호출
+            }
+
+            else -> {
+                // 그 밖의 상태(Idle 등)은 아무 것도 안 함
+            }
+        }
+        when (uiStateAi) { // 화면 상태에 따라 다른 메시지를 보여줍니다.
+            DiaryUiState.Saving -> {
+                // 저장하는 중일 때
+            }
+
+            DiaryUiState.Saved -> {
+                // 저장이 끝났을 때: "저장되었습니다" 메시지를 보여줍니다.
+                //Text(\"저장되었습니다\", color = MaterialTheme.colorScheme.primary)
+                showDialog = false
+
+                // DaySummary 화면으로 이동하며 AI 결과를 인자로 전달
+                aiResult?.let { result ->
+                    val gson = Gson()
+                    val aiResultJson = URLEncoder.encode(gson.toJson(result), StandardCharsets.UTF_8.toString())
+                    navController.navigate("day_summary/${aiResultJson}") {
+                        // popUpTo 등의 옵션 추가 가능
+                    }
+                } ?: run {
+                    // AI 결과가 null일 경우 (예외 처리 또는 다른 경로로 이동)
+                    navController.navigate("day_summary/null") // 또는 오류 화면 등으로 이동
+                }
+            }
+
+            is DiaryUiState.Error -> {
+                // 오류가 생겼을 때: 오류 메시지를 빨간색으로 보여줍니다.
+                /* Text(\"오류: ${(uiState as DiaryUiState.Error).message}\",
+                     color = MaterialTheme.colorScheme.error
+                 )*/
+                showDialog = false
+                // DaySummary 화면으로 이동 (오류가 발생했어도 빈 값으로 이동하거나, 오류 상태임을 알릴 수 있음)
+                navController.navigate("day_summary/null") { // AI 결과가 없음을 나타내기 위해 "null" 문자열 전달
+                    // popUpTo 등의 옵션 추가 가능
+                }
             }
 
             else -> {
@@ -545,11 +607,31 @@ fun DiaryScreen(
             }
         }
     } // end Column (전체 화면)
+    //앱 실행시 나오는 다이얼 로그
+    if (showDialog) {
+        InfiniteAnimation(
+            navController = navController, // navController 전달
+            onDismissRequest = {
+                showDialog = false
+            }
+        )
+    }
+    /*if (showFeedbackSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showFeedbackSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        ) {
+            AiFeedbackScreenContent(
+                onClose = { showFeedbackSheet = false }
+            )
+        }
+    }*/
+
 } // end DiaryScreen
 
 
 @Preview
 @Composable
 fun calendar_preview() {
-    DiaryScreen()
+    DiaryScreen(navController = rememberNavController())
 }

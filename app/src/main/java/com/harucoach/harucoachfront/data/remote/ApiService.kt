@@ -1,10 +1,11 @@
 package com.harucoach.harucoachfront.data.remote
 
+
+
 import com.harucoach.harucoachfront.data.models.*
 import retrofit2.http.*
 
-interface ApiService {
-
+interface ApiService  {
     //폼 방식
     @FormUrlEncoded
     @POST("auth/login")
@@ -26,4 +27,25 @@ interface ApiService {
     suspend fun submitCognitiveAnswers(
         @Body body: SubmitRequest
     ): ResultResponse
+
+
+    // 특정 사용자의 모든 일기 목록을 조회합니다.
+    @GET("diary/list")
+    suspend fun getDiaryList(
+        @Query("user_id") userId: Int = 2, // 로그인 연동 전 임시
+    ): List<DiaryResponse>
+
+    // 일기 저장
+    @POST("diary/create/?user_id=2")
+    suspend fun submitDiaryCreate(
+        @Body body: DiaryEntry
+    ): ResultDiary
+
+    // 일기 AI
+    @POST("diary/ai")
+    suspend fun aiDiaryCreate(
+        @Body body: DiaryAiEntry
+    ): ResultAiDiary
+
+
 }

@@ -28,6 +28,7 @@ import com.harucoach.harucoachfront.ui.theme.HaruCoachFrontTheme
 import dagger.hilt.android.AndroidEntryPoint
 import com.harucoach.harucoachfront.R // Added R import
 import com.harucoach.harucoachfront.ui.screens.HaruApp // Import HaruApp
+import com.harucoach.harucoachfront.ui.screens.InfiniteAnimation
 
 
 @AndroidEntryPoint // 2. Hilt가 의존성을 주입할 진입점임을 선언

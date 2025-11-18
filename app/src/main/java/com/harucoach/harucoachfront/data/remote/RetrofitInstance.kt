@@ -7,7 +7,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitInstance {
-
     // ✅ 먼저 선언 (순서 중요)
     private val logging: HttpLoggingInterceptor by lazy {
         HttpLoggingInterceptor().apply {
@@ -16,7 +15,7 @@ object RetrofitInstance {
     }
 
     // ✅ BASE_URL
-    private const val BASE_URL = "http://10.0.2.2:8000/"
+    private const val BASE_URL = "http://217.142.129.155:8000/"
 
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()

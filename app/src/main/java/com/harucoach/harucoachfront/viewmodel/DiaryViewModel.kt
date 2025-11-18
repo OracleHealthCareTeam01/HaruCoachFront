@@ -1,8 +1,12 @@
 package com.harucoach.harucoachfront.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel  // ViewModel은 앱의 뇌처럼, 화면이 바뀌어도 기억을 지켜줘요.
 import androidx.lifecycle.viewModelScope  // 이건 안전한 방에서 일을 하게 해줘요, 앱이 안 깨지게.
+import com.harucoach.harucoachfront.data.models.DiaryAiEntry
 import com.harucoach.harucoachfront.data.models.DiaryEntry  // 일기 조각(날짜, 기분, 텍스트)을 가져오는 친구예요.
+import com.harucoach.harucoachfront.data.models.DiaryResponse
+import com.harucoach.harucoachfront.data.models.ResultAiDiary
 import com.harucoach.harucoachfront.data.repository.DiaryRepository  // 데이터 창고(저장소)를 연결해줘요, 백엔드나 메모리에서 일기를 가져와요.
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -46,6 +50,10 @@ class DiaryViewModel @Inject constructor(
     // ---------- UI 상태 관리용 StateFlow들 ----------
     private val _uiState = MutableStateFlow<DiaryUiState>(DiaryUiState.Idle) // 내부 쓰기용
     val uiState: StateFlow<DiaryUiState> = _uiState.asStateFlow() // 외부 읽기용
+    // end uiState
+    // ---------- UI 상태 관리용 StateFlow들 ----------
+    private val _uiStateAi = MutableStateFlow<DiaryUiState>(DiaryUiState.Idle) // 내부 쓰기용
+    val uiStateAi: StateFlow<DiaryUiState> = _uiStateAi.asStateFlow() // 외부 읽기용
     // end uiState
 
     private val _selectedDate = MutableStateFlow(LocalDate.now()) // 사용자가 선택한 날짜 (초기: 오늘)
@@ -121,9 +129,10 @@ class DiaryViewModel @Inject constructor(
      *  TODO update 따로 구현
      */
     fun saveDiary() {
+
         val date = _selectedDate.value
         val key = date.format(dateFormatter)
-        val entry = DiaryEntry(date = date, mood = _currentMood.value, text = _currentText.value)
+        val entry = DiaryEntry(entry_date = date.toString(), mood_code = _currentMood.value, content = _currentText.value)
 
         viewModelScope.launch {
             _uiState.value = DiaryUiState.Saving // 저장 중 상태
@@ -136,7 +145,8 @@ class DiaryViewModel @Inject constructor(
                     repository.updateDiary(entry)
                 } else {
                     // 없으면 새로 저장
-                    repository.saveDiary(entry)
+                    //repository.saveDiary(entry)
+                    repository.startDiaryTest(entry)
                 }
 
                 // 메모리에도 반영해서 즉시 UI에 갱신되도록 함
@@ -174,8 +184,8 @@ class DiaryViewModel @Inject constructor(
                 val entry = memoryStore[key]
                 if (entry != null) {
                     // 있으면 UI 상태를 해당 값으로 채움
-                    _currentMood.value = entry.mood
-                    _currentText.value = entry.text
+                    _currentMood.value = entry.mood_code
+                    _currentText.value = entry.content
                 } else {
                     // 없으면 기본값으로 초기화
                     _currentMood.value = "보통"
@@ -202,8 +212,38 @@ class DiaryViewModel @Inject constructor(
     private fun refreshMoodMap() {
         // memoryStore의 키는 "yyyy-MM-dd" 문자열임을 가정
         val map = memoryStore.mapKeys { LocalDate.parse(it.key, dateFormatter) }
-            .mapValues { it.value.mood }
+            .mapValues { it.value.mood_code }
         _moodMap.value = map
     }
 
+    private val _aiResult = MutableStateFlow<ResultAiDiary?>(null)
+    val aiResult: StateFlow<ResultAiDiary?> = _aiResult.asStateFlow()
+
+
+    fun DiaryAi() {
+        val date = _selectedDate.value
+        val entry = DiaryAiEntry(entry_date = date.toString(), display_name ="쿠모", content = _currentText.value)
+
+        viewModelScope.launch {
+            _uiStateAi.value = DiaryUiState.Saving // 저장 중 상태
+            try {
+                delay(500) // 시뮬레이션 (실제 API 호출에서는 필요 없을 수 있음)
+                val result = repository.startDiaryAi(entry) // repository에서 결과 받기
+                _aiResult.value = result // AI 분석 결과 StateFlow 업데이트
+
+                _uiStateAi.value = DiaryUiState.Saved // 성공 상태 표시
+                delay(600) // 사용자 피드백을 위한 짧은 지연
+                _uiStateAi.value = DiaryUiState.Idle
+            } catch (e: Exception) {
+                _uiStateAi.value = DiaryUiState.Error(e.localizedMessage ?: "ai 실패")
+                _aiResult.value = null // 실패 시 결과 초기화
+                Log.e("DiaryViewModel", "DiaryAi failed: ${e.localizedMessage}", e) // 에러 로깅 추가
+            }
+        }
+    }
+
+    // --- AI 결과 초기화를 위한 함수 추가 ---
+    fun clearAiResult() {
+        _aiResult.value = null
+    }
 } // end DiaryViewModel

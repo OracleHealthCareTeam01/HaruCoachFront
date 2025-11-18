@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.harucoach.harucoachfront.data.models.AnswerItem
@@ -29,12 +30,9 @@ class CognitiveViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CognitiveUiState())
     val uiState: StateFlow<CognitiveUiState> = _uiState
 
-    init {
-        // 화면 진입 시 자동으로 10문항 로드
-        startTest(userId = 1, count = 10)
-    }
-
-    fun startTest(userId: Int = 1, count: Int = 10, category: String? = null) {
+    // init에서 자동 시작 제거
+    // 사용자가 버튼을 눌러야만 startTest()가 호출
+    fun startTest(userId: Int = 2, count: Int = 10, category: String? = null) {
         _uiState.value = _uiState.value.copy(loading = true, error = null, result = null)
         viewModelScope.launch {
             try {
@@ -43,12 +41,15 @@ class CognitiveViewModel @Inject constructor(
                     loading = false,
                     sessionId = res.sessionId,
                     questions = res.questions,
-                    answers = emptyMap(),
+                    answers = emptyMap()
                 )
+                Log.d("CognitiveViewModel", "검사 시작 성공! sessionId: ${res.sessionId}, 문제 수: ${res.questions.size}")
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    loading = false, error = "시작 실패: ${e.message}"
+                    loading = false,
+                    error = "시작 실패: ${e.message}"
                 )
+                Log.e("CognitiveViewModel", "검사 시작 실패", e)
             }
         }
     }
@@ -59,33 +60,46 @@ class CognitiveViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(answers = newMap)
     }
 
-    fun submit() {
+    fun submit(sttList: List<String>, latencyMs: List<Int>) {
         val state = _uiState.value
-        val sid = state.sessionId ?: return
-        val payload = state.questions.map { q ->
+        val sid = state.sessionId ?: run {
+            Log.e("CognitiveViewModel", "sessionId가 없어서 제출 불가!")
+            return
+        }
+
+        val payload = state.questions.mapIndexed { index, q ->
             AnswerItem(
                 questionNo = q.questionNo,
                 questionId = q.questionId,
-                sttText = null,                    // STT 결과는 여기로
+                sttText = sttList.getOrNull(index) ?: "",  // 안전하게 가져오기
                 typedText = state.answers[q.questionNo] ?: "",
-                latencyMs = null
+                latencyMs = latencyMs.getOrNull(index) ?: 0
             )
         }
+
+        Log.d("CognitiveViewModel", "제출 데이터: $payload")
 
         _uiState.value = state.copy(loading = true, error = null)
         viewModelScope.launch {
             try {
                 val res = repo.submitAnswers(sid, payload)
-                _uiState.value = _uiState.value.copy(loading = false, result = res)
+                _uiState.value = _uiState.value.copy(
+                    loading = false,
+                    result = res
+                )
+                Log.d("CognitiveViewModel", "제출 성공! 총점: ${res.totalScore}, 등급: ${res.grade}")
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    loading = false, error = "제출 실패: ${e.message}"
+                    loading = false,
+                    error = "제출 실패: ${e.message}"
                 )
+                Log.e("CognitiveViewModel", "제출 실패", e)
             }
         }
     }
 
     fun reset() {
         _uiState.value = CognitiveUiState()
+        Log.d("CognitiveViewModel", "상태 초기화 완료")
     }
 }
