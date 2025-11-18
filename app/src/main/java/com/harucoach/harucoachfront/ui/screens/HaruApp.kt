@@ -17,6 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument // navArgument 임포트 추가
+import androidx.navigation.NavType // NavType 임포트 추가
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveIntroScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveTestScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveWaitingScreen
@@ -27,6 +29,10 @@ import com.harucoach.harucoachfront.ui.screens.learn.games.ColorMatchGameScreen
 import com.harucoach.harucoachfront.ui.screens.learn.games.MemoryGameScreen
 import com.harucoach.harucoachfront.ui.screens.learn.games.NumbersGameScreen
 import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
+import com.harucoach.harucoachfront.data.models.ResultAiDiary // ResultAiDiary 임포트
+import com.google.gson.Gson // Gson 임포트
+import java.net.URLDecoder // URLDecoder 임포트
+import java.nio.charset.StandardCharsets // StandardCharsets 임포트
 import com.harucoach.harucoachfront.viewmodel.GameViewModel
 
 object Routes {
@@ -39,7 +45,7 @@ object Routes {
     const val LEARN = "learn"
     const val MY = "my"
     const val DAY_SUMMARY = "day_summary"
-
+    const val DAY_SUMMARY_WITH_ARG = "day_summary/{aiFeedbackResultJson}" // 인자를 받는 경로 정의
     const val NUMBERS_GAME = "numbers_game"
     const val MEMORY_GAME = "memory_game"      // 숫자 기억 게임
     const val COLOR_GAME = "color_game"        // 색깔 맞추기 게임
@@ -75,6 +81,7 @@ fun HaruApp() {
         Routes.LEARN -> "오늘의 학습"
         Routes.MY -> "내 정보"
         Routes.DAY_SUMMARY -> "하루요약"
+        Routes.DAY_SUMMARY_WITH_ARG -> "하루요약"
         Routes.NUMBERS_GAME -> "숫자게임"
         Routes.MEMORY_GAME -> "숫자 기억하기"
         Routes.COLOR_GAME -> "색깔 맞추기"
@@ -116,7 +123,7 @@ fun HaruApp() {
             composable(Routes.COGNITIVE_RESULT) {
                 CognitiveResultScreen(navController = nav, sharedCognitiveViewModel)
             }
-            //오늘의 일기 
+            //오늘의 일기
             composable(Routes.DIARY) {
                 //SimplePage("오늘의 일기")
                 DiaryScreen(nav,onCancel = { nav.popBackStack() })
@@ -155,8 +162,21 @@ fun HaruApp() {
                 ProfileScreen()
             }
             //하루요약
-            composable(Routes.DAY_SUMMARY) {
-                DaySummary(nav)
+            composable(
+                route = Routes.DAY_SUMMARY_WITH_ARG, // 인자를 받는 경로로 변경
+                arguments = listOf(navArgument("aiFeedbackResultJson") {
+                    type = NavType.StringType
+                    nullable = true // null 값도 허용
+                })
+            ) { backStackEntry ->
+                val aiFeedbackResultJson = backStackEntry.arguments?.getString("aiFeedbackResultJson")
+                val aiFeedbackResult: ResultAiDiary? = if (aiFeedbackResultJson != "null" && aiFeedbackResultJson != null) {
+                    val decodedJson = URLDecoder.decode(aiFeedbackResultJson, StandardCharsets.UTF_8.toString())
+                    Gson().fromJson(decodedJson, ResultAiDiary::class.java)
+                } else {
+                    null
+                }
+                DaySummary(navController = nav, aiFeedbackResult = aiFeedbackResult)
             }
 
         }

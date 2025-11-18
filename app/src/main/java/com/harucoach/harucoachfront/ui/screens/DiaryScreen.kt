@@ -1,5 +1,6 @@
 package com.harucoach.harucoachfront.ui.screens
 
+// Gson 임포트
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognitionListener
@@ -65,17 +66,19 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import com.google.gson.Gson
 import com.harucoach.harucoachfront.R
 import com.harucoach.harucoachfront.ui.componenets.CalendarMonthView
 import com.harucoach.harucoachfront.ui.componenets.MoodSelectDialog
 import com.harucoach.harucoachfront.viewmodel.DiaryUiState
 import com.harucoach.harucoachfront.viewmodel.DiaryViewModel
 import kotlinx.coroutines.launch
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.log
 
 /**
  * DiaryScreen: 한 줄씩 아주 쉬운 설명 주석이 달린 Compose 화면
@@ -196,9 +199,9 @@ fun DiaryScreen(
             override fun onPartialResults(partialResults: Bundle?) {
                 // 인식된 부분 텍스트 목록을 가져옴
                 val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-               /* if (!matches.isNullOrEmpty()) {
-                    recordedText = matches[0] // 첫 번째 부분 인식 결과를 recordedText에 표시
-                }*/
+                /* if (!matches.isNullOrEmpty()) {
+                     recordedText = matches[0] // 첫 번째 부분 인식 결과를 recordedText에 표시
+                 }*/
             }
 
             // 기타 이벤트가 발생했을 때 호출됨
@@ -219,6 +222,9 @@ fun DiaryScreen(
     // UI가 보여줄 값들을 ViewModel에서 가져옵니다.
     // collectAsState()는 '실시간으로 값이 바뀌면 UI도 따라 바뀌게' 해주는 도구예요.
     val uiState by viewModel.uiState.collectAsState()            // 화면의 상태 (로딩, 저장중 등)
+    val uiStateAi by viewModel.uiStateAi.collectAsState()            // 화면의 상태 (로딩, 저장중 등)
+    val aiResult by viewModel.aiResult.collectAsState() // AI 분석 결과
+
     val selectedDate by viewModel.selectedDate.collectAsState()  // 사용자가 선택한 날짜
     val text by viewModel.currentText.collectAsState()           // 일기 텍스트 내용
     val mood by viewModel.currentMood.collectAsState()           // 현재 선택된 감정(이모지)
@@ -245,7 +251,7 @@ fun DiaryScreen(
 
     // 페이저의 현재 페이지가 바뀌면(사용자가 스와이프하면) 이 블록이 실행됩니다.
     LaunchedEffect(pagerState.currentPage) {
-        // 현재 보고 있는 달을 계산합니다. 
+        // 현재 보고 있는 달을 계산합니다.
         val ym = range.getOrNull(pagerState.currentPage) ?: centerYearMonth
         // 여기서 'ym'을 이용해 서버에서 그 달의 데이터를 가져오도록 연결할 수 있어요.
     } // end LaunchedEffect(pagerState.currentPage)
@@ -259,7 +265,7 @@ fun DiaryScreen(
     LaunchedEffect(Unit) {
         viewModel.selectDate(selectedDate)
     }
-   /* var showFeedbackSheet by remember { mutableStateOf(false) }*/
+    /* var showFeedbackSheet by remember { mutableStateOf(false) }*/
 
     // end when uiState
     val scrollState = rememberScrollState()
@@ -545,9 +551,7 @@ fun DiaryScreen(
             DiaryUiState.Saved -> {
                 // 저장이 끝났을 때: "저장되었습니다" 메시지를 보여줍니다.
                 Text("저장되었습니다", color = MaterialTheme.colorScheme.primary)
-                showDialog = false
-                navController.navigate("day_summary") { // DaySummary 화면으로 이동
-                }
+                viewModel.DiaryAi()//AI호출
             }
 
             is DiaryUiState.Error -> {
@@ -556,8 +560,45 @@ fun DiaryScreen(
                     "오류: ${(uiState as DiaryUiState.Error).message}",
                     color = MaterialTheme.colorScheme.error
                 )
+                viewModel.DiaryAi()//AI호출
+            }
+
+            else -> {
+                // 그 밖의 상태(Idle 등)은 아무 것도 안 함
+            }
+        }
+        when (uiStateAi) { // 화면 상태에 따라 다른 메시지를 보여줍니다.
+            DiaryUiState.Saving -> {
+                // 저장하는 중일 때
+            }
+
+            DiaryUiState.Saved -> {
+                // 저장이 끝났을 때: "저장되었습니다" 메시지를 보여줍니다.
+                //Text(\"저장되었습니다\", color = MaterialTheme.colorScheme.primary)
                 showDialog = false
-                navController.navigate("day_summary") { // DaySummary 화면으로 이동
+
+                // DaySummary 화면으로 이동하며 AI 결과를 인자로 전달
+                aiResult?.let { result ->
+                    val gson = Gson()
+                    val aiResultJson = URLEncoder.encode(gson.toJson(result), StandardCharsets.UTF_8.toString())
+                    navController.navigate("day_summary/${aiResultJson}") {
+                        // popUpTo 등의 옵션 추가 가능
+                    }
+                } ?: run {
+                    // AI 결과가 null일 경우 (예외 처리 또는 다른 경로로 이동)
+                    navController.navigate("day_summary/null") // 또는 오류 화면 등으로 이동
+                }
+            }
+
+            is DiaryUiState.Error -> {
+                // 오류가 생겼을 때: 오류 메시지를 빨간색으로 보여줍니다.
+                /* Text(\"오류: ${(uiState as DiaryUiState.Error).message}\",
+                     color = MaterialTheme.colorScheme.error
+                 )*/
+                showDialog = false
+                // DaySummary 화면으로 이동 (오류가 발생했어도 빈 값으로 이동하거나, 오류 상태임을 알릴 수 있음)
+                navController.navigate("day_summary/null") { // AI 결과가 없음을 나타내기 위해 "null" 문자열 전달
+                    // popUpTo 등의 옵션 추가 가능
                 }
             }
 
@@ -565,7 +606,6 @@ fun DiaryScreen(
                 // 그 밖의 상태(Idle 등)은 아무 것도 안 함
             }
         }
-
     } // end Column (전체 화면)
     //앱 실행시 나오는 다이얼 로그
     if (showDialog) {
