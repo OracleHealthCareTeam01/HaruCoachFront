@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,6 +48,7 @@ fun NumbersGameScreen(
     var showResultDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
     var isCorrect by remember { mutableStateOf(false) }  // 🔥 정답 여부 추가
+    var showExitDialog by remember { mutableStateOf(false) }  // 🔥 나가기 확인 다이얼로그
 
     // 🔥 ViewModel에서 현재 점수 가져오기
     val currentScore by gameViewModel.numbersGameScore.collectAsState()
@@ -209,6 +211,50 @@ fun NumbersGameScreen(
                 Text("정답 확인", fontSize = 18.sp)
             }
         }
+
+        // 🔥 나가기 버튼 (우측 상단)
+        IconButton(
+            onClick = { showExitDialog = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "나가기",
+                tint = Color.Gray,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+    }
+
+    // 🔥 나가기 확인 다이얼로그
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = { Text("게임 종료") },
+            text = { Text("게임을 종료하시겠습니까?\n현재 진행 상황은 저장됩니다.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitDialog = false
+                        navController.navigate("learn") {
+                            popUpTo("learn") { inclusive = false }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252))
+                ) {
+                    Text("나가기")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showExitDialog = false }
+                ) {
+                    Text("계속하기")
+                }
+            }
+        )
     }
 
     // 6. 결과 다이얼로그

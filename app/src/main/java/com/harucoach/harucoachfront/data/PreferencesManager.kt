@@ -15,10 +15,11 @@ class PreferencesManager(private val context: Context) {
         private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
 
         //게임 점수 관련 키 추가
-                private val TOTAL_GAME_POINTS = intPreferencesKey("total_game_points")
-                private val NUMBERS_GAME_SCORE = intPreferencesKey("numbers_game_score")
-                private val MEMORY_GAME_BEST = intPreferencesKey("memory_game_best")
-                private val COLOR_GAME_BEST = intPreferencesKey("color_game_best")
+        private val TOTAL_GAME_POINTS = intPreferencesKey("total_game_points")
+        private val NUMBERS_GAME_SCORE = intPreferencesKey("numbers_game_score")
+        private val MEMORY_GAME_BEST = intPreferencesKey("memory_game_best")
+        private val COLOR_GAME_BEST = intPreferencesKey("color_game_best")
+        private val CHOSUNG_GAME_BEST = intPreferencesKey("chosung_game_best")
     }
 
     // 토큰 읽기
@@ -129,6 +130,20 @@ class PreferencesManager(private val context: Context) {
             }
         }
     }// end colorGameBestFlow
+
+    // 🔥 초성 맞추기 게임 최고 점수 읽기
+    val chosungGameBestFlow: Flow<Int> = context.dataStore.data
+        .map { prefs -> prefs[CHOSUNG_GAME_BEST] ?: 0 }
+
+    // 🔥 초성 맞추기 게임 최고 점수 저장
+    suspend fun updateChosungGameBest(score: Int) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[CHOSUNG_GAME_BEST] ?: 0
+            if (score > current) {
+                prefs[CHOSUNG_GAME_BEST] = score
+            }
+        }
+    }
 
     //  모든 게임 데이터 초기화 (테스트용)
     suspend fun clearAllGameData() {

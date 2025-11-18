@@ -42,6 +42,7 @@ fun LearnScreen(
     val numbersGameScore by gameViewModel.numbersGameScore.collectAsState()
     val memoryGameBest by gameViewModel.memoryGameBest.collectAsState()
     val colorGameBest by gameViewModel.colorGameBest.collectAsState()
+    val chosungGameBest by gameViewModel.chosungGameBest.collectAsState()
 
     Column(
         modifier = modifier
@@ -137,6 +138,17 @@ fun LearnScreen(
             gradientColors = listOf(Color(0xFFEC407A), Color(0xFFE91E63)),
             onClick = {
                 navController.navigate("color_game")
+            }
+        )
+
+        GameCard(
+            title = "초성 맞추기",
+            description = "초성을 보고 단어를 맞춰보세요!",
+            emoji = "🔤",
+            bestScore = if (chosungGameBest > 0) "최고 기록: ${chosungGameBest}점" else "최고 기록: -",  // 🔥 실시간 점수
+            gradientColors = listOf(Color(0xFFFF9800), Color(0xFFF57C00)),
+            onClick = {
+                navController.navigate("chosung_game")
             }
         )
 

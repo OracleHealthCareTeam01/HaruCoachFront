@@ -33,6 +33,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val _colorGameBest = MutableStateFlow(0)
     val colorGameBest: StateFlow<Int> = _colorGameBest.asStateFlow()
 
+    private val _chosungGameBest = MutableStateFlow(0)  // 초성 게임 추가
+    val chosungGameBest: StateFlow<Int> = _chosungGameBest.asStateFlow()
+
     // ==================== 초기화 ====================
 
     init {
@@ -66,6 +69,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             // 색깔 맞추기 게임 최고 점수
             prefsManager.colorGameBestFlow.collect { best ->
                 _colorGameBest.value = best
+            }
+        }
+
+        viewModelScope.launch {
+            // 초성 맞추기 게임 최고 점수
+            prefsManager.chosungGameBestFlow.collect { best ->
+                _chosungGameBest.value = best
             }
         }
     }
@@ -108,6 +118,20 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun onColorGameComplete(score: Int, points: Int) {
         viewModelScope.launch {
             prefsManager.updateColorGameBest(score)
+            prefsManager.addGamePoints(points)
+        }
+    }
+
+    // ==================== 초성 맞추기 게임 ====================
+
+    /**
+     * 초성 맞추기 게임 완료 시 호출
+     * @param score 획득한 점수
+     * @param points 누적 포인트에 추가할 값
+     */
+    fun onChosungGameComplete(score: Int, points: Int) {
+        viewModelScope.launch {
+            prefsManager.updateChosungGameBest(score)
             prefsManager.addGamePoints(points)
         }
     }

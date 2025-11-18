@@ -22,6 +22,8 @@ import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveTestScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveWaitingScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveResultScreen
 import com.harucoach.harucoachfront.ui.screens.learn.LearnScreen
+import com.harucoach.harucoachfront.ui.screens.learn.games.ChosungGameScreen
+import com.harucoach.harucoachfront.ui.screens.learn.games.ColorMatchGameScreen
 import com.harucoach.harucoachfront.ui.screens.learn.games.MemoryGameScreen
 import com.harucoach.harucoachfront.ui.screens.learn.games.NumbersGameScreen
 import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
@@ -41,6 +43,7 @@ object Routes {
     const val NUMBERS_GAME = "numbers_game"
     const val MEMORY_GAME = "memory_game"      // 숫자 기억 게임
     const val COLOR_GAME = "color_game"        // 색깔 맞추기 게임
+    const val GAME_CHOSUNG = "chosung_game"
 
 }
 
@@ -56,7 +59,7 @@ fun HaruApp() {
         viewModelStoreOwner = activity
     )
 
-    val sharedGameViewModel: GameViewModel = viewModel(  // 🔥 GameViewModel 추가!
+    val sharedGameViewModel: GameViewModel = viewModel(  // GameViewModel 추가!
         viewModelStoreOwner = activity
     )
 
@@ -75,6 +78,7 @@ fun HaruApp() {
         Routes.NUMBERS_GAME -> "숫자게임"
         Routes.MEMORY_GAME -> "숫자 기억하기"
         Routes.COLOR_GAME -> "색깔 맞추기"
+        Routes.GAME_CHOSUNG -> "초성 맞추기"
         else -> ""
     }
 
@@ -135,8 +139,14 @@ fun HaruApp() {
             }
 
             composable(Routes.COLOR_GAME) {
-                // TODO: 다음 단계에서 만들 예정
-                Text("색깔 맞추기 게임 화면 (준비 중)")
+                ColorMatchGameScreen(navController = nav, gameViewModel = sharedGameViewModel)
+            }
+
+            composable(Routes.GAME_CHOSUNG) {  // 초성 게임 추가
+                ChosungGameScreen(
+                    navController = nav,
+                    gameViewModel = sharedGameViewModel
+                )
             }
 
 
