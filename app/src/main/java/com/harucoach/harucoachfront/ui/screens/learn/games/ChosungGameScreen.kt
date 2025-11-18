@@ -11,10 +11,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -240,6 +242,10 @@ fun ChosungGameScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        startGame()
+    }
+
     // 타이머
     LaunchedEffect(gameState.currentQuestionIndex, gameState.remainingTime) {
         if (!gameState.isGameOver && gameState.questions.isNotEmpty() && gameState.remainingTime > 0) {
@@ -254,9 +260,7 @@ fun ChosungGameScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        startGame()
-    }
+
 
     // --- UI ---
     if (gameState.questions.isEmpty()) {
@@ -274,6 +278,7 @@ fun ChosungGameScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())   // ← 스크롤 추가 정답확인이 안보여서
             .background(
                 Brush.verticalGradient(
                     colors = listOf(Color(0xFFFFF3E0), Color(0xFFFFE0B2))

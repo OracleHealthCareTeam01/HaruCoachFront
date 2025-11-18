@@ -167,6 +167,11 @@ fun ColorMatchGameScreen(
         }
     }
 
+    // 게임 시작 (최초 1회)
+    LaunchedEffect(Unit) {
+        startGame()
+    }
+
     // 타이머
     LaunchedEffect(gameState.currentQuestionIndex, gameState.remainingTime) {
         if (!gameState.isGameOver && gameState.questions.isNotEmpty() && gameState.remainingTime > 0) {
@@ -179,11 +184,6 @@ fun ColorMatchGameScreen(
                 showResultDialog = true
             }
         }
-    }
-
-    // 게임 시작 (최초 1회)
-    LaunchedEffect(Unit) {
-        startGame()
     }
 
     // --- UI ---
