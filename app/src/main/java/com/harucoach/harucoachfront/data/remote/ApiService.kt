@@ -41,5 +41,11 @@ interface ApiService  {
         @Body body: DiaryEntry
     ): ResultDiary
 
+    // 일기 AI
+    @POST("diary/ai")
+    suspend fun aiDiaryCreate(
+        @Body body: DiaryAiEntry
+    ): ResultAiDiary
+
 
 }
