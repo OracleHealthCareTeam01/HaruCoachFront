@@ -23,11 +23,17 @@ import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveIntroScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveTestScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveWaitingScreen
 import com.harucoach.harucoachfront.ui.screens.cognitive.CognitiveResultScreen
+import com.harucoach.harucoachfront.ui.screens.learn.LearnScreen
+import com.harucoach.harucoachfront.ui.screens.learn.games.ChosungGameScreen
+import com.harucoach.harucoachfront.ui.screens.learn.games.ColorMatchGameScreen
+import com.harucoach.harucoachfront.ui.screens.learn.games.MemoryGameScreen
+import com.harucoach.harucoachfront.ui.screens.learn.games.NumbersGameScreen
 import com.harucoach.harucoachfront.viewmodel.CognitiveViewModel
 import com.harucoach.harucoachfront.data.models.ResultAiDiary // ResultAiDiary 임포트
 import com.google.gson.Gson // Gson 임포트
 import java.net.URLDecoder // URLDecoder 임포트
 import java.nio.charset.StandardCharsets // StandardCharsets 임포트
+import com.harucoach.harucoachfront.viewmodel.GameViewModel
 
 object Routes {
     const val HOME = "home"
@@ -41,6 +47,10 @@ object Routes {
     const val DAY_SUMMARY = "day_summary"
     const val DAY_SUMMARY_WITH_ARG = "day_summary/{aiFeedbackResultJson}" // 인자를 받는 경로 정의
     const val NUMBERS_GAME = "numbers_game"
+    const val MEMORY_GAME = "memory_game"      // 숫자 기억 게임
+    const val COLOR_GAME = "color_game"        // 색깔 맞추기 게임
+    const val GAME_CHOSUNG = "chosung_game"
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +62,10 @@ fun HaruApp() {
     // Activity 범위의 ViewModel 생성 (한 번만!)
     val activity = LocalContext.current as ComponentActivity
     val sharedCognitiveViewModel: CognitiveViewModel = viewModel(
+        viewModelStoreOwner = activity
+    )
+
+    val sharedGameViewModel: GameViewModel = viewModel(  // GameViewModel 추가!
         viewModelStoreOwner = activity
     )
 
@@ -69,6 +83,9 @@ fun HaruApp() {
         Routes.DAY_SUMMARY -> "하루요약"
         Routes.DAY_SUMMARY_WITH_ARG -> "하루요약"
         Routes.NUMBERS_GAME -> "숫자게임"
+        Routes.MEMORY_GAME -> "숫자 기억하기"
+        Routes.COLOR_GAME -> "색깔 맞추기"
+        Routes.GAME_CHOSUNG -> "초성 맞추기"
         else -> ""
     }
 
@@ -111,10 +128,35 @@ fun HaruApp() {
                 //SimplePage("오늘의 일기")
                 DiaryScreen(nav,onCancel = { nav.popBackStack() })
             }
+
+
+
+            // ************ 오늘의 학습 ==> 게임들 ****************//
             //오늘의 학습
             composable(Routes.LEARN) {
-                //SimplePage("오늘의 학습")
+                LearnScreen(navController = nav, gameViewModel = sharedGameViewModel)
             }
+            //숫자게임
+            composable(Routes.NUMBERS_GAME) {
+                NumbersGameScreen(nav, gameViewModel = sharedGameViewModel)
+            }
+
+            composable(Routes.MEMORY_GAME) {
+                MemoryGameScreen(navController = nav, gameViewModel = sharedGameViewModel)
+            }
+
+            composable(Routes.COLOR_GAME) {
+                ColorMatchGameScreen(navController = nav, gameViewModel = sharedGameViewModel)
+            }
+
+            composable(Routes.GAME_CHOSUNG) {  // 초성 게임 추가
+                ChosungGameScreen(
+                    navController = nav,
+                    gameViewModel = sharedGameViewModel
+                )
+            }
+
+
             //마이페이지
             composable(Routes.MY) {
                 ProfileScreen()
@@ -136,10 +178,7 @@ fun HaruApp() {
                 }
                 DaySummary(navController = nav, aiFeedbackResult = aiFeedbackResult)
             }
-            //숫자게임
-            composable(Routes.NUMBERS_GAME) {
-                NumbersGameScreen(nav)
-            }
+
         }
     }
 }
